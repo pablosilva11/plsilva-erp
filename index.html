@@ -975,49 +975,38 @@ const Orcamentos = ({clients}) => {
       const listaServicos = servicosAtivos.map(s => s.nome).join(", ");
       const detalhesServicos = servicosAtivos.map(s => `- ${s.obs}`).join("\n");
 
-      const conteudo = `PROPOSTA PR${form.numero}_${form.ano}
-
-Uberlândia, ${form.data}.
-
-A
-${form.cliente_nome}
-${form.cliente_end}
-
-Ref.: Proposta de elaboração de projetos.
-
-1.0 ESCOPO DOS SERVIÇOS
-
-- Elaboração de projetos sendo ${listaServicos}.
-
-${detalhesServicos}
-
-2.0 HONORÁRIOS E CONDIÇÕES DE PAGAMENTO
-
-2.1 Referente ao item 1.1 será cobrado R$ ${form.valor_total} (${form.valor_extenso}) de honorários.
-
-3.0 INCLUSOS:
-3.1 Honorários Equipe Técnica exceto RT de execução da obra.
-3.2 ART (Anotação de Responsabilidade Técnica para elaboração) perante o CREA;
-3.3 Tramitação junto aos órgãos para aprovação.
-3.4 No projeto de prevenção e combate a incêndio dimensionamento de meios preventivos e tramitação junto ao Infoscip.
-3.5 Elaboração do projeto hidrossanitário de abastecimento e esgotamento sanitário.
-3.6 Elaboração de NB de acordo com parâmetros da PMU e Cartório e PGRCC.
-3.7 ${form.visitas}
-
-RUA JAMIL TANNUS N. 533 – B. LÍDICE – UBERLÂNDIA MG (34) 3219.7318
-
-CONDIÇÕES DE PAGAMENTO:
-- ${form.condicoes}
-
-PRAZOS
-- ${form.prazo}
-
-CONDIÇÕES GERAIS
-- Caso ocorra a rescisão do contrato, por decisão da Contratante, antes do término de sua vigência, deverá ser pago o valor incorrido proporcional até a data.
-- Esta proposta é válida pelo período de 15 (quinze) dias corridos, no entanto a disponibilidade de agenda pode ser alterada a qualquer momento.
-- Não inclusos taxas de análise, vistoria e caso haja será necessário encaminhar o projeto já aprovado existente no lote.
-
-RUA JAMIL TANNUS N. 533 – B. LÍDICE – UBERLÂNDIA MG (34) 3219.7318`;
+      const nl = "\n";
+      const conteudo = [
+        "PROPOSTA PR"+form.numero+"_"+form.ano,nl,
+        "Uberlândia, "+form.data+".",nl,
+        "A",nl,
+        form.cliente_nome,nl,
+        form.cliente_end,nl,
+        "Ref.: Proposta de elaboração de projetos.",nl,nl,
+        "1.0 ESCOPO DOS SERVIÇOS",nl,
+        "- Elaboração de projetos sendo "+listaServicos+".",nl,
+        detalhesServicos,nl,nl,
+        "2.0 HONORÁRIOS E CONDIÇÕES DE PAGAMENTO",nl,
+        "2.1 Referente ao item 1.1 será cobrado R$ "+form.valor_total+" ("+form.valor_extenso+") de honorários.",nl,nl,
+        "3.0 INCLUSOS:",nl,
+        "3.1 Honorários Equipe Técnica exceto RT de execução da obra.",nl,
+        "3.2 ART (Anotação de Responsabilidade Técnica) perante o CREA;",nl,
+        "3.3 Tramitação junto aos órgãos para aprovação.",nl,
+        "3.4 Dimensionamento de meios preventivos e tramitação junto ao Infoscip.",nl,
+        "3.5 Elaboração do projeto hidrossanitário de abastecimento e esgotamento.",nl,
+        "3.6 Elaboração de NB de acordo com parâmetros da PMU e Cartório e PGRCC.",nl,
+        "3.7 "+form.visitas,nl,nl,
+        "RUA JAMIL TANNUS N. 533 - B. LIDICE - UBERLANDIA MG (34) 3219.7318",nl,nl,
+        "CONDIÇÕES DE PAGAMENTO:",nl,
+        "- "+form.condicoes,nl,nl,
+        "PRAZOS",nl,
+        "- "+form.prazo,nl,nl,
+        "CONDIÇÕES GERAIS",nl,
+        "- Caso ocorra rescisão do contrato por decisão da Contratante, deverá ser pago o valor incorrido proporcional até a data.",nl,
+        "- Esta proposta é válida por 15 (quinze) dias corridos.",nl,
+        "- Não inclusos taxas de análise e vistoria.",nl,nl,
+        "RUA JAMIL TANNUS N. 533 - B. LIDICE - UBERLANDIA MG (34) 3219.7318"
+      ].join("");
 
       // Cria blob de texto e baixa como .txt provisório
       // O Word real seria gerado pelo servidor
