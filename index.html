@@ -1,1 +1,816 @@
-https://pablosilva11.github.io/plsilva-erp/
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PLSilva">
+<title>PLSilva Engenharia</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: #0a0a0a; color: #f0f0f0; font-family: -apple-system, 'Inter', system-ui, sans-serif; overscroll-behavior: none; }
+::-webkit-scrollbar { width: 0; height: 0; }
+input, select, textarea, button { font-family: inherit; font-size: 16px; }
+input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+const SURL = "https://sreatrvvgxooddhkbago.supabase.co";
+const SKEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyZWF0cnZ2Z3hvb2RkaGtiYWdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MzUxNjUsImV4cCI6MjA5NjAxMTE2NX0.SOS84j22J7lsIzTaUu-SheVV__d87_YUhhP24puKZvU";
+const sb = supabase.createClient(SURL, SKEY);
+const C = {
+  bg:"#0a0a0a",surface:"#111111",surfaceHover:"#181818",border:"#222222",
+  text:"#f0f0f0",textMuted:"#888888",textFaint:"#3a3a3a",
+  accent:"#E8A020",accentDim:"#2a1a00",accentText:"#F5C060",
+  success:"#22C55E",warning:"#F59E0B",danger:"#EF4444",
+  info:"#3B82F6",infoBg:"#0a1a3a",graphite:"#161616",
+  purple:"#8B5CF6",cyan:"#06B6D4"
+};
+const SC = {
+  "Orcamento":{color:"#64748b",bg:"#1e2533"},"Contratado":{color:"#3B82F6",bg:"#0a1a3a"},
+  "Em desenvolvimento":{color:"#8B5CF6",bg:"#1a0a3a"},"Revisao":{color:"#F59E0B",bg:"#2a1a00"},
+  "Protocolado":{color:"#06B6D4",bg:"#001a2a"},"Em analise":{color:"#F97316",bg:"#2a1000"},
+  "Aprovado":{color:"#22C55E",bg:"#0a2e1a"},"Concluido":{color:"#10B981",bg:"#0a2520"},
+};
+const TIPOS_PROJETO = [
+  "Arquitetonico","Estrutural","Hidrossanitario","Eletrico",
+  "PSCIP","SPDA","Regularizacao","Compatibilizacao",
+  "NBR 12721","PGRCC","Interiores","Outros/Diversos"
+];
+const fmt = v => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v||0);
+const fmtD = d => d ? new Date(d+"T12:00:00").toLocaleDateString("pt-BR") : "-";
+const TODAY = new Date();
+const PASTAS = ["Contrato","ART","PDF","DWG","Memorial","Aprovacao","Prefeitura","CBMMG","Foto","Outro"];
+const TIPO_ICON = {pdf:"📄",dwg:"📐",docx:"📝",xlsx:"📊",jpg:"🖼️",png:"🖼️",zip:"📦"};
+const TIPO_COR = {pdf:"#EF4444",dwg:"#3B82F6",docx:"#8B5CF6",xlsx:"#22C55E",jpg:"#F59E0B",png:"#F59E0B",zip:"#888"};
+const TIPO_COR_PROJ = {
+  "Arquitetonico":"#E8A020","Estrutural":"#3B82F6","Hidrossanitario":"#06B6D4",
+  "Eletrico":"#F59E0B","PSCIP":"#EF4444","SPDA":"#8B5CF6",
+  "Regularizacao":"#10B981","Compatibilizacao":"#F97316",
+  "NBR 12721":"#22C55E","PGRCC":"#64748b","Interiores":"#ec4899","Outros/Diversos":"#0ea5e9"
+};
+const Badge = ({text}) => {
+  const cfg=SC[text]||{color:"#888",bg:"#1a1a1a"};
+  return <span style={{display:"inline-flex",alignItems:"center",padding:"3px 10px",borderRadius:6,fontSize:11,fontWeight:700,color:cfg.color,background:cfg.bg,border:`1px solid ${cfg.color}33`,whiteSpace:"nowrap"}}>{text}</span>;
+};
+const Btn = ({children,onClick,style={},primary,small,danger,full}) => (
+  <button onClick={onClick} style={{background:primary?C.accent:danger?C.danger:C.border,color:primary?"#000":C.text,border:"none",borderRadius:10,padding:small?"10px 16px":"14px 20px",fontSize:small?13:15,fontWeight:700,cursor:"pointer",width:full?"100%":"auto",minHeight:44,...style}}>{children}</button>
+);
+const Inp = ({value,onChange,placeholder,type="text"}) => (
+  <input type={type} value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
+    style={{width:"100%",padding:"14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,color:C.text,fontSize:16,outline:"none",boxSizing:"border-box",minHeight:48}}
+    onFocus={e=>e.target.style.borderColor=C.accent} onBlur={e=>e.target.style.borderColor=C.border}/>
+);
+const Sel = ({value,onChange,options}) => (
+  <select value={value||""} onChange={e=>onChange(e.target.value)}
+    style={{width:"100%",padding:"14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,color:C.text,fontSize:16,outline:"none",cursor:"pointer",minHeight:48}}>
+    <option value="">Selecione...</option>
+    {options.map(o=><option key={o.value||o} value={o.value!==undefined?o.value:o}>{o.label||o}</option>)}
+  </select>
+);
+const Fld = ({label,children}) => (
+  <div style={{marginBottom:16}}>
+    <label style={{display:"block",fontSize:12,fontWeight:700,color:C.textMuted,marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>{label}</label>
+    {children}
+  </div>
+);
+const Modal = ({title,onClose,children}) => (
+  <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:1000,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div style={{background:C.surface,borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"92vh",overflowY:"auto",padding:"24px 20px",paddingBottom:"calc(24px + env(safe-area-inset-bottom, 20px))"}}>
+      <div style={{width:40,height:4,background:C.border,borderRadius:2,margin:"0 auto 20px"}}/>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <h3 style={{margin:0,fontSize:18,fontWeight:800,color:C.text}}>{title}</h3>
+        <button onClick={onClose} style={{background:C.border,border:"none",borderRadius:8,color:C.text,width:36,height:36,fontSize:20,cursor:"pointer"}}>×</button>
+      </div>
+      {children}
+    </div>
+  </div>
+);
+const Loading = () => <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:60,color:C.textMuted,fontSize:14}}>Carregando...</div>;
+const PBar = ({value,max,color=C.accent}) => {
+  const pct=max>0?Math.min(100,Math.round((value/max)*100)):0;
+  return <div style={{background:C.border,borderRadius:4,height:6}}><div style={{width:`${pct}%`,height:"100%",background:color,borderRadius:4,transition:"width 0.5s"}}/></div>;
+};const Dashboard = ({clients,projects,laudos,receivables,payables}) => {
+  const pendRec=receivables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
+  const monRec=receivables.filter(r=>r.status==="Recebido").reduce((s,r)=>s+r.value,0);
+  const ativos=projects.filter(p=>!["Concluido","Orcamento"].includes(p.status));
+  const concluidos=projects.filter(p=>p.status==="Concluido");
+  const orcamentos=projects.filter(p=>p.status==="Orcamento");
+  const recPorAno=useMemo(()=>{
+    const map={};
+    receivables.filter(r=>r.status==="Recebido"&&r.due_date).forEach(r=>{
+      const ano=r.due_date.substring(0,4);
+      map[ano]=(map[ano]||0)+r.value;
+    });
+    return Object.entries(map).sort((a,b)=>a[0]-b[0]).slice(-6);
+  },[receivables]);
+  const maxAno=recPorAno.length?Math.max(...recPorAno.map(([,v])=>v)):1;
+  const fatPorTipo=useMemo(()=>{
+    const map={};
+    projects.forEach(p=>{
+      if(!p.type)return;
+      if(!map[p.type])map[p.type]={qtd:0,valor:0};
+      map[p.type].qtd++;map[p.type].valor+=p.value||0;
+    });
+    return Object.entries(map).sort((a,b)=>b[1].valor-a[1].valor).slice(0,6);
+  },[projects]);
+  const maxTipo=fatPorTipo.length?Math.max(...fatPorTipo.map(([,v])=>v.valor),1):1;
+  return(<div style={{paddingBottom:20}}>
+    <div style={{marginBottom:20}}>
+      <h1 style={{fontSize:22,fontWeight:900,color:C.text,margin:"0 0 2px"}}>Dashboard</h1>
+      <p style={{color:C.textMuted,fontSize:13}}>{TODAY.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p>
+    </div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
+      {[
+        {label:"Projetos Ativos",value:ativos.length,sub:"Em execução",icon:"📐",color:C.accent,hl:true},
+        {label:"Concluídos",value:concluidos.length,sub:"Finalizados",icon:"✅",color:C.success,hl:true},
+        {label:"Orçamentos",value:orcamentos.length,sub:"Aguardando",icon:"📋",color:C.info},
+        {label:"Clientes",value:clients.length,sub:"Cadastrados",icon:"👥",color:C.cyan},
+        {label:"Receita Recebida",value:fmt(monRec),sub:"Total histórico",icon:"💰",color:C.success,hl:true},
+        {label:"A Receber",value:fmt(pendRec),sub:"Pendente",icon:"📥",color:C.warning,hl:true},
+      ].map((c,i)=>(
+        <div key={i} style={{background:C.surface,border:`1px solid ${c.hl?c.color+"44":C.border}`,borderRadius:12,padding:14,borderTop:c.hl?`2px solid ${c.color}`:`1px solid ${C.border}`}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+            <span style={{fontSize:10,color:C.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em"}}>{c.label}</span>
+            <span style={{fontSize:18}}>{c.icon}</span>
+          </div>
+          <div style={{fontSize:typeof c.value==="number"?24:15,fontWeight:900,color:C.text}}>{c.value}</div>
+          <div style={{fontSize:11,color:C.textMuted,marginTop:2}}>{c.sub}</div>
+        </div>
+      ))}
+    </div>
+    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:16}}>
+      <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>📊 Status dos Projetos</h3>
+      {[
+        {label:"Ativos",val:ativos.length,color:C.accent},
+        {label:"Concluídos",val:concluidos.length,color:C.success},
+        {label:"Orçamentos",val:orcamentos.length,color:C.info},
+        {label:"Em Aprovação",val:projects.filter(p=>["Protocolado","Em analise"].includes(p.status)).length,color:C.cyan},
+      ].map((item,i)=>(
+        <div key={i} style={{marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+            <span style={{fontSize:12,color:C.textMuted}}>{item.label}</span>
+            <span style={{fontSize:12,fontWeight:700,color:item.color}}>{item.val}</span>
+          </div>
+          <PBar value={item.val} max={projects.length||1} color={item.color}/>
+        </div>
+      ))}
+    </div>
+    {fatPorTipo.length>0&&<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:16}}>
+      <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>🏗️ Faturamento por Tipo</h3>
+      {fatPorTipo.map(([tipo,dados])=>{
+        const cor=TIPO_COR_PROJ[tipo]||C.accent;
+        return(<div key={tipo} style={{marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <div style={{width:8,height:8,borderRadius:2,background:cor,flexShrink:0}}/>
+              <span style={{fontSize:12,color:C.text,fontWeight:600}}>{tipo}</span>
+              <span style={{fontSize:11,color:C.textMuted}}>({dados.qtd})</span>
+            </div>
+            <span style={{fontSize:12,fontWeight:800,color:cor}}>{fmt(dados.valor)}</span>
+          </div>
+          <PBar value={dados.valor} max={maxTipo} color={cor}/>
+        </div>);
+      })}
+    </div>}
+    {recPorAno.length>0&&<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:16}}>
+      <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>📈 Receita por Ano</h3>
+      {recPorAno.map(([ano,val])=>(
+        <div key={ano} style={{marginBottom:10}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+            <span style={{fontSize:12,color:C.textMuted,fontWeight:700}}>{ano}</span>
+            <span style={{fontSize:12,fontWeight:800,color:C.accentText}}>{fmt(val)}</span>
+          </div>
+          <PBar value={val} max={maxAno} color={C.accent}/>
+        </div>
+      ))}
+    </div>}
+    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+      <h3 style={{margin:"0 0 12px",fontSize:14,fontWeight:800,color:C.text}}>🕐 Projetos Recentes</h3>
+      {projects.slice(0,5).map(p=>(
+        <div key={p.id} style={{padding:"10px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <p style={{margin:0,fontSize:14,fontWeight:700,color:C.text}}>{p.code}</p>
+            <p style={{margin:0,fontSize:11,color:C.textMuted}}>{p.type} · {fmt(p.value||0)}</p>
+          </div>
+          <Badge text={p.status}/>
+        </div>
+      ))}
+      {projects.length===0&&<p style={{color:C.textMuted,fontSize:13}}>Nenhum projeto</p>}
+    </div>
+  </div>);
+};
+const Relatorios = ({receivables,payables,projects,clients}) => {
+  const [anoFiltro,setAnoFiltro]=useState("Todos");
+  const [abaRel,setAbaRel]=useState("anos");
+  const recPorAno=useMemo(()=>{
+    const map={};
+    receivables.filter(r=>r.status==="Recebido"&&r.due_date).forEach(r=>{
+      const ano=r.due_date.substring(0,4);
+      if(!map[ano])map[ano]={total:0,qtd:0};
+      map[ano].total+=r.value;map[ano].qtd++;
+    });
+    return Object.entries(map).sort((a,b)=>b[0]-a[0]);
+  },[receivables]);
+  const anos=["Todos",...recPorAno.map(([a])=>a)];
+  const maxVal=recPorAno.length?Math.max(...recPorAno.map(([,v])=>v.total)):1;
+  const totalGeral=recPorAno.reduce((s,[,v])=>s+v.total,0);
+  const recPorMes=useMemo(()=>{
+    if(anoFiltro==="Todos")return[];
+    const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+    const map=Array(12).fill(0);
+    receivables.filter(r=>r.status==="Recebido"&&r.due_date&&r.due_date.startsWith(anoFiltro)).forEach(r=>{
+      const mes=parseInt(r.due_date.substring(5,7))-1;
+      map[mes]+=r.value;
+    });
+    return map.map((v,i)=>({mes:MESES[i],val:v}));
+  },[receivables,anoFiltro]);
+  const maxMes=recPorMes.length?Math.max(...recPorMes.map(r=>r.val),1):1;
+  const fatPorTipo=useMemo(()=>{
+    const map={};
+    projects.forEach(p=>{
+      if(!p.type)return;
+      if(!map[p.type])map[p.type]={qtd:0,valor:0,concluidos:0};
+      map[p.type].qtd++;map[p.type].valor+=p.value||0;
+      if(p.status==="Concluido")map[p.type].concluidos++;
+    });
+    return Object.entries(map).sort((a,b)=>b[1].valor-a[1].valor);
+  },[projects]);
+  const maxTipo=fatPorTipo.length?Math.max(...fatPorTipo.map(([,v])=>v.valor),1):1;
+  const totalTipos=fatPorTipo.reduce((s,[,v])=>s+v.valor,0);
+  return(<div>
+    <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:"0 0 4px"}}>Relatórios</h2>
+    <p style={{color:C.textMuted,fontSize:13,marginBottom:16}}>Análise financeira histórica</p>
+    <div style={{background:`linear-gradient(135deg,${C.accentDim},#1a1000)`,border:`1px solid ${C.accent}44`,borderRadius:14,padding:20,marginBottom:16,textAlign:"center"}}>
+      <p style={{margin:"0 0 4px",fontSize:11,color:C.accentText,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em"}}>Receita Total Histórica</p>
+      <p style={{margin:0,fontSize:28,fontWeight:900,color:C.accent}}>{fmt(totalGeral)}</p>
+      <p style={{margin:"4px 0 0",fontSize:12,color:C.textMuted}}>{receivables.filter(r=>r.status==="Recebido").length} recebimentos · {clients.length} clientes</p>
+    </div>
+    <div style={{display:"flex",gap:4,background:C.graphite,borderRadius:10,padding:4,marginBottom:16}}>
+      {[["anos","Por Ano"],["tipos","Por Tipo"]].map(([k,l])=>(
+        <button key={k} onClick={()=>setAbaRel(k)} style={{flex:1,padding:"10px",borderRadius:8,border:"none",cursor:"pointer",background:abaRel===k?C.surface:"transparent",color:abaRel===k?C.text:C.textMuted,fontSize:13,fontWeight:700,minHeight:40}}>{l}</button>
+      ))}
+    </div>
+    {abaRel==="anos"&&<>
+      <div style={{display:"flex",gap:8,overflowX:"auto",marginBottom:16,paddingBottom:4}}>
+        {anos.map(a=>(
+          <button key={a} onClick={()=>setAnoFiltro(a)} style={{padding:"8px 16px",borderRadius:20,fontSize:12,fontWeight:700,cursor:"pointer",border:`1px solid ${anoFiltro===a?C.accent:C.border}`,background:anoFiltro===a?C.accentDim:"transparent",color:anoFiltro===a?C.accentText:C.textMuted,whiteSpace:"nowrap",minHeight:36}}>{a}</button>
+        ))}
+      </div>
+      {anoFiltro!=="Todos"&&recPorMes.length>0&&(
+        <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:16}}>
+          <h3 style={{margin:"0 0 16px",fontSize:14,fontWeight:800,color:C.text}}>📅 Mês a Mês — {anoFiltro}</h3>
+          <div style={{display:"flex",alignItems:"flex-end",gap:4,height:100}}>
+            {recPorMes.map(({mes,val})=>{
+              const pct=maxMes>0?Math.max(4,Math.round((val/maxMes)*100)):4;
+              return(<div key={mes} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                <div style={{width:"100%",height:`${pct}%`,background:val>0?C.accent:C.border,borderRadius:"4px 4px 0 0",minHeight:4}}/>
+                <span style={{fontSize:9,color:C.textMuted}}>{mes}</span>
+              </div>);
+            })}
+          </div>
+          <div style={{marginTop:10,textAlign:"center"}}>
+            <span style={{fontSize:14,color:C.accentText,fontWeight:800}}>{fmt(recPorMes.reduce((s,r)=>s+r.val,0))}</span>
+            <span style={{fontSize:11,color:C.textMuted}}> total em {anoFiltro}</span>
+          </div>
+        </div>
+      )}
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>📊 Receita por Ano</h3>
+        {(anoFiltro==="Todos"?recPorAno:recPorAno.filter(([a])=>a===anoFiltro)).map(([ano,dados])=>(
+          <div key={ano} style={{marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+              <div><span style={{fontSize:15,fontWeight:800,color:C.text}}>{ano}</span><span style={{fontSize:11,color:C.textMuted,marginLeft:8}}>{dados.qtd} recebimentos</span></div>
+              <span style={{fontSize:14,fontWeight:900,color:C.accentText}}>{fmt(dados.total)}</span>
+            </div>
+            <PBar value={dados.total} max={maxVal} color={C.accent}/>
+          </div>
+        ))}
+      </div>
+    </>}
+    {abaRel==="tipos"&&<>
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:16}}>
+        <h3 style={{margin:"0 0 4px",fontSize:14,fontWeight:800,color:C.text}}>🏗️ Faturamento por Tipo</h3>
+        <p style={{margin:"0 0 14px",fontSize:11,color:C.textMuted}}>Total: {fmt(totalTipos)}</p>
+        {fatPorTipo.map(([tipo,dados])=>{
+          const cor=TIPO_COR_PROJ[tipo]||C.accent;
+          const pct=totalTipos>0?((dados.valor/totalTipos)*100).toFixed(1):0;
+          return(<div key={tipo} style={{marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+              <div>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+                  <div style={{width:10,height:10,borderRadius:3,background:cor,flexShrink:0}}/>
+                  <span style={{fontSize:13,color:C.text,fontWeight:700}}>{tipo}</span>
+                </div>
+                <span style={{fontSize:11,color:C.textMuted,marginLeft:16}}>{dados.qtd} proj. · {dados.concluidos} concluídos</span>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:13,fontWeight:900,color:cor}}>{fmt(dados.valor)}</div>
+                <div style={{fontSize:11,color:C.textMuted}}>{pct}%</div>
+              </div>
+            </div>
+            <PBar value={dados.valor} max={maxTipo} color={cor}/>
+          </div>);
+        })}
+      </div>
+    </>}
+  </div>);
+};
+const Projects = ({projects,clients,receivables,reload}) => {
+  const [filter,setFilter]=useState("Todos");
+  const [modal,setModal]=useState(false);
+  const [sel,setSel]=useState(null);
+  const [form,setForm]=useState({});
+  const [loading,setLoading]=useState(false);
+  const STATUSES=["Orcamento","Contratado","Em desenvolvimento","Revisao","Protocolado","Em analise","Aprovado","Concluido"];
+  const filtered=filter==="Todos"?projects:projects.filter(p=>p.status===filter);
+  const sf=k=>v=>setForm(p=>({...p,[k]:v}));
+  const save=async()=>{
+    if(!form.code||!form.client_id)return alert("Codigo e cliente obrigatorios!");
+    setLoading(true);
+    const d={code:form.code,client_id:+form.client_id,type:form.type,responsible:form.responsible,value:+form.value||0,start_date:form.start_date||null,deadline:form.deadline||null,status:form.status||"Orcamento",description:form.description};
+    if(form.id){await sb.from("projects").update(d).eq("id",form.id);}else{await sb.from("projects").insert(d);}
+    await reload();setLoading(false);setModal(false);setSel(null);
+  };
+  const del=async(id)=>{if(!confirm("Excluir?"))return;await sb.from("projects").delete().eq("id",id);await reload();setSel(null);};
+  const fatPorTipo=useMemo(()=>{
+    const map={};
+    projects.forEach(p=>{if(!p.type)return;if(!map[p.type])map[p.type]={qtd:0,valor:0};map[p.type].qtd++;map[p.type].valor+=p.value||0;});
+    return Object.entries(map).sort((a,b)=>b[1].valor-a[1].valor);
+  },[projects]);
+  if(sel){
+    const cl=clients.find(c=>c.id===sel.client_id);
+    const recv=receivables.filter(r=>r.project_id===sel.id&&r.status==="Recebido").reduce((s,r)=>s+r.value,0);
+    const pct=sel.value>0?Math.round((recv/sel.value)*100):0;
+    const cor=TIPO_COR_PROJ[sel.type]||C.accent;
+    return(<div>
+      <button onClick={()=>setSel(null)} style={{background:"none",border:"none",color:C.accent,fontSize:16,cursor:"pointer",marginBottom:16,padding:0}}>← Voltar</button>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
+        <div><span style={{fontFamily:"monospace",fontSize:12,color:C.accent}}>{sel.code}</span><h1 style={{fontSize:20,fontWeight:900,color:C.text,margin:"4px 0 2px"}}>{sel.type}</h1><p style={{color:C.textMuted,margin:0,fontSize:13}}>{cl?.name||"-"}</p></div>
+        <Badge text={sel.status}/>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
+        {[{l:"Valor Total",v:fmt(sel.value||0),ic:"💼"},{l:"Recebido",v:fmt(recv),ic:"✅"},{l:"Progresso",v:`${pct}%`,ic:"📊"}].map(({l,v,ic})=>(
+          <div key={l} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:12,textAlign:"center"}}>
+            <div style={{fontSize:20,marginBottom:4}}>{ic}</div>
+            <div style={{fontSize:14,fontWeight:800,color:C.text}}>{v}</div>
+            <div style={{fontSize:10,color:C.textMuted}}>{l}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+          <span style={{fontSize:13,color:C.textMuted}}>Faturamento</span>
+          <span style={{fontSize:13,fontWeight:700,color:cor}}>{pct}% recebido</span>
+        </div>
+        <PBar value={recv} max={sel.value||1} color={cor}/>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
+          <span style={{fontSize:11,color:C.success}}>{fmt(recv)} recebido</span>
+          <span style={{fontSize:11,color:C.warning}}>{fmt((sel.value||0)-recv)} pendente</span>
+        </div>
+      </div>
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:12}}>
+        <h3 style={{margin:"0 0 12px",fontSize:14,fontWeight:700,color:C.text}}>Detalhes</h3>
+        {[["Tipo",sel.type],["Responsável",sel.responsible],["Início",fmtD(sel.start_date)],["Prazo",fmtD(sel.deadline)]].map(([l,v])=>(
+          <div key={l} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.border}`}}>
+            <span style={{fontSize:12,color:C.textMuted}}>{l}</span><span style={{fontSize:12,color:C.text,fontWeight:600}}>{v||"-"}</span>
+          </div>
+        ))}
+        {sel.description&&<p style={{margin:"12px 0 0",fontSize:13,color:C.textMuted}}>{sel.description}</p>}
+      </div>
+      <div style={{display:"flex",gap:12}}>
+        <Btn primary full onClick={()=>{setForm({...sel,client_id:String(sel.client_id),value:String(sel.value)});setModal(true);}}>✏️ Editar</Btn>
+        <Btn danger onClick={()=>del(sel.id)}>🗑️</Btn>
+      </div>
+      {modal&&<Modal title="Editar Projeto" onClose={()=>setModal(false)}>
+        <Fld label="Codigo"><Inp value={form.code||""} onChange={sf("code")}/></Fld>
+        <Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
+        <Fld label="Tipo de Projeto"><Sel value={form.type||""} onChange={sf("type")} options={TIPOS_PROJETO}/></Fld>
+        <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={STATUSES}/></Fld>
+        <Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld>
+        <Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld>
+        <Fld label="Inicio"><Inp value={form.start_date||""} onChange={sf("start_date")} type="date"/></Fld>
+        <Fld label="Prazo"><Inp value={form.deadline||""} onChange={sf("deadline")} type="date"/></Fld>
+        <Btn full primary onClick={save} style={{marginTop:8}}>{loading?"Salvando...":"Salvar"}</Btn>
+      </Modal>}
+    </div>);
+  }
+  return(<div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Projetos <span style={{fontSize:13,color:C.textMuted,fontWeight:400}}>({projects.length})</span></h2>
+      <Btn small primary onClick={()=>{setForm({status:"Orcamento",type:"Arquitetonico"});setModal(true);}}>+ Novo</Btn>
+    </div>
+    {fatPorTipo.length>0&&<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14,marginBottom:16}}>
+      <p style={{margin:"0 0 10px",fontSize:12,fontWeight:700,color:C.textMuted,textTransform:"uppercase"}}>Faturamento por Tipo</p>
+      <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:4}}>
+        {fatPorTipo.slice(0,6).map(([tipo,dados])=>{
+          const cor=TIPO_COR_PROJ[tipo]||C.accent;
+          return(<div key={tipo} style={{background:C.bg,border:`1px solid ${cor}44`,borderRadius:8,padding:"8px 12px",flexShrink:0,borderTop:`2px solid ${cor}`}}>
+            <p style={{margin:"0 0 2px",fontSize:11,color:C.textMuted,whiteSpace:"nowrap"}}>{tipo}</p>
+            <p style={{margin:0,fontSize:13,fontWeight:800,color:cor}}>{fmt(dados.valor)}</p>
+            <p style={{margin:0,fontSize:10,color:C.textMuted}}>{dados.qtd} proj.</p>
+          </div>);
+        })}
+      </div>
+    </div>}
+    <div style={{display:"flex",gap:8,overflowX:"auto",marginBottom:16,paddingBottom:4}}>
+      {["Todos",...STATUSES].map(s=><button key={s} onClick={()=>setFilter(s)} style={{padding:"8px 14px",borderRadius:20,fontSize:12,fontWeight:700,cursor:"pointer",border:`1px solid ${filter===s?C.accent:C.border}`,background:filter===s?C.accentDim:"transparent",color:filter===s?C.accentText:C.textMuted,whiteSpace:"nowrap",minHeight:36}}>{s}{s!=="Todos"?` (${projects.filter(p=>p.status===s).length})`:""}</button>)}
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+      {filtered.map(p=>{
+        const cl=clients.find(c=>c.id===p.client_id);
+        const recv=receivables.filter(r=>r.project_id===p.id&&r.status==="Recebido").reduce((s,r)=>s+r.value,0);
+        const cor=TIPO_COR_PROJ[p.type]||C.accent;
+        return(<div key={p.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,cursor:"pointer",borderLeft:`3px solid ${cor}`}} onClick={()=>setSel(p)}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+            <div><span style={{fontFamily:"monospace",fontSize:11,color:C.accent}}>{p.code}</span><h3 style={{margin:"3px 0 0",fontSize:15,fontWeight:800,color:C.text}}>{p.type}</h3></div>
+            <Badge text={p.status}/>
+          </div>
+          <p style={{margin:"0 0 2px",fontSize:13,color:C.text,fontWeight:600}}>{cl?.name||"-"}</p>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
+            <span style={{fontSize:13,fontWeight:800,color:C.success}}>{fmt(p.value)}</span>
+            <span style={{fontSize:12,color:C.textMuted}}>Ver detalhes ›</span>
+          </div>
+        </div>);
+      })}
+      {filtered.length===0&&<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum projeto</div>}
+    </div>
+    {modal&&<Modal title="Novo Projeto" onClose={()=>setModal(false)}>
+      <Fld label="Codigo"><Inp value={form.code||""} onChange={sf("code")} placeholder="PRJ-2024-001"/></Fld>
+      <Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
+      <Fld label="Tipo de Projeto"><Sel value={form.type||""} onChange={sf("type")} options={TIPOS_PROJETO}/></Fld>
+      <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={STATUSES}/></Fld>
+      <Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld>
+      <Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld>
+      <Fld label="Inicio"><Inp value={form.start_date||""} onChange={sf("start_date")} type="date"/></Fld>
+      <Fld label="Prazo"><Inp value={form.deadline||""} onChange={sf("deadline")} type="date"/></Fld>
+      <Btn full primary onClick={save} style={{marginTop:8}}>{loading?"Salvando...":"Salvar Projeto"}</Btn>
+    </Modal>}
+  </div>);
+};
+const Clients = ({clients,projects,laudos,receivables,reload}) => {
+  const [search,setSearch]=useState("");
+  const [modal,setModal]=useState(false);
+  const [sel,setSel]=useState(null);
+  const [form,setForm]=useState({});
+  const [loading,setLoading]=useState(false);
+  const list=clients.filter(c=>c.name?.toLowerCase().includes(search.toLowerCase())||c.doc?.includes(search));
+  const sf=k=>v=>setForm(p=>({...p,[k]:v}));
+  const save=async()=>{
+    if(!form.name)return alert("Nome obrigatorio!");
+    setLoading(true);
+    const d={name:form.name,type:form.type||"PF",doc:form.doc,phone:form.phone,email:form.email,city:form.city,state:form.state||"MG",address:form.address};
+    if(form.id){await sb.from("clients").update(d).eq("id",form.id);}else{await sb.from("clients").insert(d);}
+    await reload();setLoading(false);setModal(false);setSel(null);
+  };
+  const del=async(id)=>{if(!confirm("Excluir?"))return;await sb.from("clients").delete().eq("id",id);await reload();setSel(null);};
+  if(sel){
+    const sp=projects.filter(p=>p.client_id===sel.id);
+    const totalR=receivables.filter(r=>r.client_id===sel.id&&r.status==="Recebido").reduce((s,r)=>s+r.value,0);
+    return(<div>
+      <button onClick={()=>setSel(null)} style={{background:"none",border:"none",color:C.accent,fontSize:16,cursor:"pointer",marginBottom:16,padding:0}}>← Voltar</button>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
+        <div><h1 style={{fontSize:20,fontWeight:900,color:C.text,margin:"0 0 4px"}}>{sel.name}</h1><p style={{color:C.textMuted,margin:0,fontSize:13}}>{sel.doc}</p></div>
+        <Btn small primary onClick={()=>{setForm({...sel});setModal(true);}}>Editar</Btn>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
+        {[{l:"Projetos",v:sp.length,ic:"📐"},{l:"Laudos",v:laudos.filter(l=>l.client_id===sel.id).length,ic:"📋"},{l:"Recebido",v:fmt(totalR).replace("R$ ","R$"),ic:"💰"}].map(({l,v,ic})=>(
+          <div key={l} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:12,textAlign:"center"}}>
+            <div style={{fontSize:20,marginBottom:4}}>{ic}</div>
+            <div style={{fontSize:16,fontWeight:800,color:C.text}}>{v}</div>
+            <div style={{fontSize:10,color:C.textMuted}}>{l}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:12}}>
+        <h3 style={{margin:"0 0 12px",fontSize:14,fontWeight:700,color:C.text}}>Contato</h3>
+        {[["📞",sel.phone],["📧",sel.email],["📍",sel.address],["🏙️",`${sel.city||""}/${sel.state||""}`]].map(([ic,v])=>v?(
+          <div key={ic} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:`1px solid ${C.border}`}}>
+            <span style={{fontSize:18}}>{ic}</span><span style={{fontSize:13,color:C.text}}>{v}</span>
+          </div>):null)}
+      </div>
+      {sp.length>0&&<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+        <h3 style={{margin:"0 0 12px",fontSize:14,fontWeight:700,color:C.text}}>Projetos</h3>
+        {sp.map(p=>(
+          <div key={p.id} style={{padding:"10px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><p style={{margin:0,fontSize:14,fontWeight:700,color:C.text}}>{p.code}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{p.type} · {fmt(p.value||0)}</p></div>
+            <Badge text={p.status}/>
+          </div>
+        ))}
+      </div>}
+      {modal&&<Modal title="Editar Cliente" onClose={()=>setModal(false)}>
+        <Fld label="Nome"><Inp value={form.name||""} onChange={sf("name")}/></Fld>
+        <Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={[{value:"PF",label:"Pessoa Fisica"},{value:"PJ",label:"Pessoa Juridica"}]}/></Fld>
+        <Fld label="CPF/CNPJ"><Inp value={form.doc||""} onChange={sf("doc")}/></Fld>
+        <Fld label="Telefone"><Inp value={form.phone||""} onChange={sf("phone")}/></Fld>
+        <Fld label="Email"><Inp value={form.email||""} onChange={sf("email")}/></Fld>
+        <Fld label="Cidade"><Inp value={form.city||""} onChange={sf("city")}/></Fld>
+        <Btn full primary onClick={save} style={{marginTop:8}}>{loading?"Salvando...":"Salvar"}</Btn>
+      </Modal>}
+    </div>);
+  }
+  return(<div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Clientes <span style={{fontSize:13,color:C.textMuted,fontWeight:400}}>({clients.length})</span></h2>
+      <Btn small primary onClick={()=>{setForm({type:"PF",state:"MG"});setModal(true);}}>+ Novo</Btn>
+    </div>
+    <div style={{marginBottom:16}}><Inp value={search} onChange={setSearch} placeholder="Buscar cliente..."/></div>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {list.slice(0,50).map(c=>(
+        <div key={c.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,cursor:"pointer"}} onClick={()=>setSel(c)}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><p style={{margin:0,fontSize:15,fontWeight:700,color:C.text}}>{c.name}</p><p style={{margin:"2px 0 0",fontSize:12,color:C.textMuted}}>{c.city}/{c.state}</p></div>
+            <span style={{color:C.textMuted,fontSize:20}}>›</span>
+          </div>
+        </div>
+      ))}
+      {list.length>50&&<p style={{textAlign:"center",color:C.textMuted,fontSize:13}}>Mostrando 50 de {list.length}. Refine a busca.</p>}
+      {list.length===0&&<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum cliente</div>}
+    </div>
+    {modal&&<Modal title="Novo Cliente" onClose={()=>setModal(false)}>
+      <Fld label="Nome"><Inp value={form.name||""} onChange={sf("name")} placeholder="Nome completo"/></Fld>
+      <Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={[{value:"PF",label:"Pessoa Fisica"},{value:"PJ",label:"Pessoa Juridica"}]}/></Fld>
+      <Fld label="CPF/CNPJ"><Inp value={form.doc||""} onChange={sf("doc")}/></Fld>
+      <Fld label="Telefone"><Inp value={form.phone||""} onChange={sf("phone")} placeholder="(34) 99999-9999"/></Fld>
+      <Fld label="Email"><Inp value={form.email||""} onChange={sf("email")}/></Fld>
+      <Fld label="Cidade"><Inp value={form.city||""} onChange={sf("city")}/></Fld>
+      <Btn full primary onClick={save} style={{marginTop:8}}>{loading?"Salvando...":"Salvar"}</Btn>
+    </Modal>}
+  </div>);
+};
+const Documentos = ({projects}) => {
+  const [docs,setDocs]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [uploading,setUploading]=useState(false);
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({project_id:"",pasta:"Contrato"});
+  const [file,setFile]=useState(null);
+  const sf=k=>v=>setForm(p=>({...p,[k]:v}));
+  const loadDocs=async()=>{setLoading(true);const{data}=await sb.from("documentos").select("*").order("created_at",{ascending:false});setDocs(data||[]);setLoading(false);};
+  useEffect(()=>{loadDocs();},[]);
+  const upload=async()=>{
+    if(!file||!form.project_id)return alert("Selecione projeto e arquivo!");
+    setUploading(true);
+    const ext=file.name.split(".").pop().toLowerCase();
+    const path=`${form.project_id}/${form.pasta}/${Date.now()}_${file.name}`;
+    const{error}=await sb.storage.from("documentos").upload(path,file);
+    if(error){alert("Erro: "+error.message);setUploading(false);return;}
+    const{data:u}=sb.storage.from("documentos").getPublicUrl(path);
+    await sb.from("documentos").insert({project_id:+form.project_id,pasta:form.pasta,nome:file.name,tipo:ext,tamanho:file.size,url:u.publicUrl,path});
+    await loadDocs();setUploading(false);setModal(false);setFile(null);setForm({project_id:"",pasta:"Contrato"});
+  };
+  const del=async(doc)=>{if(!confirm("Excluir?"))return;await sb.storage.from("documentos").remove([doc.path]);await sb.from("documentos").delete().eq("id",doc.id);await loadDocs();};
+  const fmtSize=b=>{if(!b)return"-";if(b>1024*1024)return`${(b/1024/1024).toFixed(1)} MB`;return`${(b/1024).toFixed(0)} KB`;};
+  return(<div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Documentos</h2>
+      <Btn small primary onClick={()=>setModal(true)}>+ Upload</Btn>
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {loading?<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Carregando...</div>:
+      docs.length===0?<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum documento</div>:
+      docs.map(doc=>{
+        const ext=doc.tipo||"pdf";const proj=projects.find(p=>p.id===doc.project_id);
+        return(<div key={doc.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14,display:"flex",alignItems:"center",gap:14}}>
+          <div style={{width:44,height:44,borderRadius:10,background:(TIPO_COR[ext]||"#888")+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{TIPO_ICON[ext]||"📄"}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <p style={{margin:0,fontSize:13,fontWeight:700,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{doc.nome}</p>
+            <p style={{margin:0,fontSize:11,color:C.textMuted}}>{doc.pasta} · {fmtSize(doc.tamanho)}</p>
+            {proj&&<p style={{margin:0,fontSize:11,color:C.accent,fontFamily:"monospace"}}>{proj.code}</p>}
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
+            <a href={doc.url} target="_blank" style={{background:C.infoBg,color:C.info,borderRadius:6,padding:"6px 10px",fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center"}}>↓</a>
+            <button onClick={()=>del(doc)} style={{background:"#2a0a0a",color:C.danger,border:"none",borderRadius:6,padding:"6px 10px",fontSize:12,cursor:"pointer"}}>🗑️</button>
+          </div>
+        </div>);
+      })}
+    </div>
+    {modal&&<Modal title="Upload de Arquivo" onClose={()=>{setModal(false);setFile(null);}}>
+      <Fld label="Projeto"><Sel value={form.project_id} onChange={sf("project_id")} options={projects.map(p=>({value:p.id,label:`${p.code} — ${p.type}`}))}/></Fld>
+      <Fld label="Categoria"><Sel value={form.pasta} onChange={sf("pasta")} options={PASTAS}/></Fld>
+      <Fld label="Arquivo">
+        <div style={{border:`2px dashed ${file?C.success:C.border}`,borderRadius:12,padding:30,textAlign:"center",cursor:"pointer"}} onClick={()=>document.getElementById("fi").click()}>
+          <input id="fi" type="file" style={{display:"none"}} onChange={e=>{if(e.target.files[0])setFile(e.target.files[0]);}} accept=".pdf,.dwg,.docx,.xlsx,.jpg,.jpeg,.png,.zip"/>
+          {file?<><p style={{fontSize:28,margin:"0 0 8px"}}>✅</p><p style={{fontSize:14,fontWeight:700,color:C.success,margin:0}}>{file.name}</p></>
+          :<><p style={{fontSize:36,margin:"0 0 8px"}}>📁</p><p style={{color:C.textMuted,fontSize:14,margin:0}}>Toque para selecionar</p></>}
+        </div>
+      </Fld>
+      <Btn full primary onClick={upload} style={{marginTop:8}}>{uploading?"Enviando...":"Fazer Upload"}</Btn>
+    </Modal>}
+  </div>);
+};
+const Laudos = ({laudos,clients,reload}) => {
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({});
+  const [loading,setLoading]=useState(false);
+  const TYPES=["Inspecao Predial","Estrutural","Patologia","SPDA","AVCB","NR12","Acessibilidade"];
+  const sf=k=>v=>setForm(p=>({...p,[k]:v}));
+  const save=async()=>{
+    if(!form.client_id)return alert("Cliente obrigatorio!");
+    setLoading(true);
+    const d={type:form.type,client_id:+form.client_id,address:form.address,responsible:form.responsible,survey_date:form.survey_date||null,delivery_date:form.delivery_date||null,value:+form.value||0,status:form.status||"Em desenvolvimento"};
+    if(form.id){await sb.from("laudos").update(d).eq("id",form.id);}else{await sb.from("laudos").insert(d);}
+    await reload();setLoading(false);setModal(false);
+  };
+  return(<div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Laudos</h2>
+      <Btn small primary onClick={()=>{setForm({status:"Em desenvolvimento",type:"Inspecao Predial"});setModal(true);}}>+ Novo</Btn>
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {laudos.map(l=>{const cl=clients.find(c=>c.id===l.client_id);return(
+        <div key={l.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{fontSize:14,fontWeight:700,color:C.text}}>{l.type}</span><Badge text={l.status}/></div>
+          <p style={{margin:"0 0 2px",fontSize:13,color:C.textMuted}}>{cl?.name||"-"}</p>
+          <p style={{margin:"0 0 10px",fontSize:12,color:C.textMuted}}>{l.address}</p>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:14,fontWeight:700,color:C.success}}>{fmt(l.value)}</span>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>{setForm({...l,client_id:String(l.client_id),value:String(l.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:20}}>✏️</button>
+              <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("laudos").delete().eq("id",l.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:20}}>🗑️</button>
+            </div>
+          </div>
+        </div>
+      );})}
+      {laudos.length===0&&<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum laudo</div>}
+    </div>
+    {modal&&<Modal title={form.id?"Editar Laudo":"Novo Laudo"} onClose={()=>setModal(false)}>
+      <Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={TYPES}/></Fld>
+      <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Em desenvolvimento","Revisao","Concluido"]}/></Fld>
+      <Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
+      <Fld label="Endereco"><Inp value={form.address||""} onChange={sf("address")}/></Fld>
+      <Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld>
+      <Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld>
+      <Fld label="Data Vistoria"><Inp value={form.survey_date||""} onChange={sf("survey_date")} type="date"/></Fld>
+      <Btn full primary onClick={save} style={{marginTop:8}}>{loading?"Salvando...":"Salvar"}</Btn>
+    </Modal>}
+  </div>);
+};
+const Financial = ({receivables,payables,clients,projects,reload}) => {
+  const [tab,setTab]=useState("rec");
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({});
+  const [loading,setLoading]=useState(false);
+  const sf=k=>v=>setForm(p=>({...p,[k]:v}));
+  const pRec=receivables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
+  const pPay=payables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
+  const tRec=receivables.filter(r=>r.status==="Recebido").reduce((s,r)=>s+r.value,0);
+  const tPay=payables.filter(r=>r.status==="Pago").reduce((s,r)=>s+r.value,0);
+  const CATS=["Equipe","Terceiros","Softwares","CREA","Impostos","Combustivel","Marketing","Equipamentos"];
+  const saveRec=async()=>{
+    if(!form.description||!form.value)return alert("Preencha descricao e valor!");
+    setLoading(true);
+    const d={client_id:+form.client_id||null,project_id:+form.project_id||null,description:form.description,value:+form.value,due_date:form.due_date||null,status:form.status||"Pendente"};
+    if(form.id){await sb.from("financials_receivables").update(d).eq("id",form.id);}else{await sb.from("financials_receivables").insert(d);}
+    await reload();setLoading(false);setModal(false);
+  };
+  const savePay=async()=>{
+    if(!form.description||!form.value)return alert("Preencha descricao e valor!");
+    setLoading(true);
+    const d={category:form.category||"Outros",description:form.description,value:+form.value,due_date:form.due_date||null,status:form.status||"Pendente"};
+    if(form.id){await sb.from("financials_payables").update(d).eq("id",form.id);}else{await sb.from("financials_payables").insert(d);}
+    await reload();setLoading(false);setModal(false);
+  };
+  return(<div>
+    <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:"0 0 16px"}}>Financeiro</h2>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+      {[{l:"A Receber",v:fmt(pRec),ic:"📥",c:C.success,hl:true},{l:"A Pagar",v:fmt(pPay),ic:"📤",c:C.danger,hl:true},
+        {l:"Recebido",v:fmt(tRec),ic:"💚",c:C.success},{l:"Saldo",v:fmt(tRec-tPay),ic:tRec>=tPay?"📈":"📉",c:tRec>=tPay?C.success:C.danger,hl:true}
+      ].map(({l,v,ic,c,hl})=>(
+        <div key={l} style={{background:C.surface,border:`1px solid ${hl?c+"44":C.border}`,borderRadius:12,padding:14,borderTop:hl?`2px solid ${c}`:`1px solid ${C.border}`}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:10,color:C.textMuted,fontWeight:700,textTransform:"uppercase"}}>{l}</span><span>{ic}</span></div>
+          <div style={{fontSize:15,fontWeight:900,color:C.text}}>{v}</div>
+        </div>
+      ))}
+    </div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+      <div style={{display:"flex",gap:4,background:C.graphite,borderRadius:10,padding:4}}>
+        {[["rec","A Receber"],["pay","A Pagar"]].map(([k,l])=>(
+          <button key={k} onClick={()=>setTab(k)} style={{padding:"10px 16px",borderRadius:8,border:"none",cursor:"pointer",background:tab===k?C.surface:"transparent",color:tab===k?C.text:C.textMuted,fontSize:13,fontWeight:700,minHeight:40}}>{l}</button>
+        ))}
+      </div>
+      <Btn small primary onClick={()=>{setForm({status:"Pendente"});setModal(true);}}>+</Btn>
+    </div>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {tab==="rec"&&receivables.slice(0,50).map(r=>(
+        <div key={r.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <p style={{margin:0,fontSize:13,fontWeight:700,color:C.text,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",paddingRight:8}}>{r.description}</p>
+            <span style={{color:r.status==="Recebido"?C.success:C.warning,fontWeight:700,fontSize:12,flexShrink:0}}>{r.status}</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><p style={{margin:0,fontSize:13,color:C.success,fontWeight:800}}>{fmt(r.value)}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{fmtD(r.due_date)}</p></div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>{setForm({...r,client_id:String(r.client_id||""),value:String(r.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:20}}>✏️</button>
+              <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("financials_receivables").delete().eq("id",r.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:20}}>🗑️</button>
+            </div>
+          </div>
+        </div>
+      ))}
+      {tab==="pay"&&payables.map(p=>(
+        <div key={p.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <p style={{margin:0,fontSize:13,fontWeight:700,color:C.text,flex:1}}>{p.description}</p>
+            <span style={{color:p.status==="Pago"?C.success:C.warning,fontWeight:700,fontSize:12}}>{p.status}</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><p style={{margin:0,fontSize:13,color:C.danger,fontWeight:800}}>{fmt(p.value)}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{p.category} · {fmtD(p.due_date)}</p></div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>{setForm({...p,value:String(p.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:20}}>✏️</button>
+              <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("financials_payables").delete().eq("id",p.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:20}}>🗑️</button>
+            </div>
+          </div>
+        </div>
+      ))}
+      {((tab==="rec"&&receivables.length===0)||(tab==="pay"&&payables.length===0))&&<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum registro</div>}
+    </div>
+    {modal&&tab==="rec"&&<Modal title="Novo Recebimento" onClose={()=>setModal(false)}>
+      <Fld label="Descricao"><Inp value={form.description||""} onChange={sf("description")} placeholder="Ex: Parcela 1/3"/></Fld>
+      <Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
+      <Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld>
+      <Fld label="Vencimento"><Inp value={form.due_date||""} onChange={sf("due_date")} type="date"/></Fld>
+      <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Pendente","Recebido","Cancelado"]}/></Fld>
+      <Btn full primary onClick={saveRec} style={{marginTop:8}}>{loading?"Salvando...":"Salvar"}</Btn>
+    </Modal>}
+    {modal&&tab==="pay"&&<Modal title="Novo Pagamento" onClose={()=>setModal(false)}>
+      <Fld label="Categoria"><Sel value={form.category||""} onChange={sf("category")} options={CATS}/></Fld>
+      <Fld label="Descricao"><Inp value={form.description||""} onChange={sf("description")}/></Fld>
+      <Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld>
+      <Fld label="Vencimento"><Inp value={form.due_date||""} onChange={sf("due_date")} type="date"/></Fld>
+      <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Pendente","Pago","Cancelado"]}/></Fld>
+      <Btn full primary onClick={savePay} style={{marginTop:8}}>{loading?"Salvando...":"Salvar"}</Btn>
+    </Modal>}
+  </div>);
+};
+const NAV=[
+  {k:"dashboard",l:"Início",ic:"📊"},
+  {k:"clientes",l:"Clientes",ic:"👥"},
+  {k:"projetos",l:"Projetos",ic:"📐"},
+  {k:"documentos",l:"Docs",ic:"📁"},
+  {k:"laudos",l:"Laudos",ic:"📋"},
+  {k:"relatorios",l:"Relatórios",ic:"📈"},
+  {k:"financeiro",l:"Financeiro",ic:"💰"},
+];
+function App(){
+  const [page,setPage]=useState("dashboard");
+  const [loading,setLoading]=useState(true);
+  const [clients,setClients]=useState([]);
+  const [projects,setProjects]=useState([]);
+  const [laudos,setLaudos]=useState([]);
+  const [receivables,setReceivables]=useState([]);
+  const [payables,setPayables]=useState([]);
+  const loadAll=async()=>{
+    setLoading(true);
+    const [c,p,l,r,py]=await Promise.all([
+      sb.from("clients").select("*").order("name"),
+      sb.from("projects").select("*").order("created_at",{ascending:false}),
+      sb.from("laudos").select("*").order("created_at",{ascending:false}),
+      sb.from("financials_receivables").select("*").order("due_date",{ascending:false}),
+      sb.from("financials_payables").select("*").order("created_at",{ascending:false}),
+    ]);
+    setClients(c.data||[]);setProjects(p.data||[]);setLaudos(l.data||[]);
+    setReceivables(r.data||[]);setPayables(py.data||[]);
+    setLoading(false);
+  };
+  useEffect(()=>{loadAll();},[]);
+  return(
+    <div style={{display:"flex",flexDirection:"column",minHeight:"100vh",background:C.bg}}>
+      <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"12px 16px",display:"flex",alignItems:"center",gap:10,position:"sticky",top:0,zIndex:100,paddingTop:"calc(12px + env(safe-area-inset-top, 0px))"}}>
+        <div style={{width:32,height:32,borderRadius:8,background:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:"#000",flexShrink:0}}>PL</div>
+        <div style={{flex:1}}><p style={{margin:0,fontSize:14,fontWeight:900,color:C.text}}>PLSilva Engenharia</p></div>
+        <button onClick={loadAll} style={{background:"none",border:"none",color:C.textMuted,fontSize:20,cursor:"pointer",padding:4}}>↺</button>
+      </div>
+      <div style={{flex:1,padding:16,paddingBottom:80,overflowY:"auto"}}>
+        {loading?<Loading/>:<>
+          {page==="dashboard"&&<Dashboard clients={clients} projects={projects} laudos={laudos} receivables={receivables} payables={payables}/>}
+          {page==="clientes"&&<Clients clients={clients} projects={projects} laudos={laudos} receivables={receivables} reload={loadAll}/>}
+          {page==="projetos"&&<Projects projects={projects} clients={clients} receivables={receivables} reload={loadAll}/>}
+          {page==="documentos"&&<Documentos projects={projects}/>}
+          {page==="laudos"&&<Laudos laudos={laudos} clients={clients} reload={loadAll}/>}
+          {page==="relatorios"&&<Relatorios receivables={receivables} payables={payables} projects={projects} clients={clients}/>}
+          {page==="financeiro"&&<Financial receivables={receivables} payables={payables} clients={clients} projects={projects} reload={loadAll}/>}
+        </>}
+      </div>
+      <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,display:"flex",overflowX:"auto",paddingBottom:"env(safe-area-inset-bottom, 0px)",zIndex:100}}>
+        {NAV.map(item=>{const active=page===item.k;return(
+          <button key={item.k} onClick={()=>setPage(item.k)} style={{flex:"0 0 auto",minWidth:60,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"8px 10px",border:"none",cursor:"pointer",background:"transparent",color:active?C.accent:C.textMuted,fontSize:9,fontWeight:active?700:500,gap:3,minHeight:56,borderTop:active?`2px solid ${C.accent}`:"2px solid transparent"}}>
+            <span style={{fontSize:18}}>{item.ic}</span>
+            <span style={{whiteSpace:"nowrap"}}>{item.l}</span>
+          </button>
+        );})}
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
