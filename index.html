@@ -750,6 +750,217 @@ const Financial = ({receivables,payables,clients,projects,reload}) => {
     </Modal>}
   </div>);
 };
+
+const SERVICOS_PADRAO = [
+  {id:"arq",nome:"Projeto Arquitetonico",obs:"Elaboracao de projeto arquitetonico para aprovacao junto a PMU."},
+  {id:"nbr",nome:"NBR 12721",obs:"Elaboracao de NB conforme NBR12721."},
+  {id:"pgrcc",nome:"PGRCC",obs:"Elaboracao de PGRCC."},
+  {id:"hidro",nome:"Hidrossanitario",obs:"Elaboracao de projeto hidrossanitario conforme NBR 5626."},
+  {id:"pscip",nome:"PSCIP",obs:"Elaboracao de projeto de prevencao e combate a incendio e panico."},
+  {id:"estru",nome:"Estrutural",obs:"Elaboracao de projeto estrutural."},
+  {id:"elet",nome:"Eletrico",obs:"Elaboracao de projeto eletrico conforme normas vigentes."},
+  {id:"spda",nome:"SPDA",obs:"Elaboracao de projeto de protecao contra descargas atmosfericas."},
+  {id:"int",nome:"Interiores",obs:"Elaboracao de projeto de interiores."},
+  {id:"div",nome:"Outros/Diversos",obs:""},
+];
+const CONDS = [
+  "Na assinatura do contrato 25%, na aprovacao junto a PMU 25%, no estrutural 25%, na entrega do hidrossanitario e PSCIP 25%, sem emissao de NF.",
+  "50% na assinatura do contrato e 50% na entrega dos projetos, sem emissao de NF.",
+  "30% na assinatura, 40% na aprovacao e 30% na entrega final, sem emissao de NF.",
+  "100% na assinatura do contrato, sem emissao de NF.",
+];
+const Orcamentos = ({clients}) => {
+  const [step,setStep]=useState(1);
+  const [num,setNum]=useState("");
+  const [data,setData]=useState(new Date().toLocaleDateString("pt-BR"));
+  const [clienteNome,setClienteNome]=useState("");
+  const [clienteEnd,setClienteEnd]=useState("");
+  const [clienteId,setClienteId]=useState("");
+  const [servicos,setServicos]=useState(SERVICOS_PADRAO.map(s=>({...s,ativo:false,obs:s.obs})));
+  const [valorTotal,setValorTotal]=useState("");
+  const [valorExtenso,setValorExtenso]=useState("");
+  const [cond,setCond]=useState(CONDS[0]);
+  const [prazo,setPrazo]=useState("Apos a assinatura do contrato ate 15 dias uteis sera apresentado o primeiro estudo e apos validacao 10 dias corridos para envio a PMU.");
+  const [visitas,setVisitas]=useState("Conferencia de locacao (01 visita), fundacoes (ate 3 visitas) e lajes (ate 04 visitas). Total 08 visitas. Visitas extras R$ 350,00/hora.");
+
+  const toggleS=i=>{const s=[...servicos];s[i]={...s[i],ativo:!s[i].ativo};setServicos(s);};
+  const updateObs=(i,v)=>{const s=[...servicos];s[i]={...s[i],obs:v};setServicos(s);};
+  const ativos=servicos.filter(s=>s.ativo);
+
+  const baixar=()=>{
+    if(!clienteNome||ativos.length===0||!valorTotal){alert("Preencha cliente, servicos e valor!");return;}
+    const linhas=[
+      "PROPOSTA PR"+num+"_"+new Date().getFullYear().toString().slice(-2),
+      "Uberlandia, "+data+".",
+      "",
+      "A",
+      clienteNome,
+      clienteEnd,
+      "",
+      "Ref.: Proposta de elaboracao de projetos.",
+      "",
+      "1.0 ESCOPO DOS SERVICOS",
+      "",
+      "- Elaboracao de projetos sendo "+ativos.map(s=>s.nome).join(", ")+".",
+      "",
+    ];
+    ativos.forEach(s=>linhas.push("- "+s.obs));
+    linhas.push("");
+    linhas.push("2.0 HONORARIOS E CONDICOES DE PAGAMENTO");
+    linhas.push("");
+    linhas.push("2.1 Referente ao item 1.1 sera cobrado R$ "+valorTotal+" ("+valorExtenso+") de honorarios.");
+    linhas.push("");
+    linhas.push("3.0 INCLUSOS:");
+    linhas.push("3.1 Honorarios Equipe Tecnica exceto RT de execucao da obra.");
+    linhas.push("3.2 ART (Anotacao de Responsabilidade Tecnica) perante o CREA;");
+    linhas.push("3.3 Tramitacao junto aos orgaos para aprovacao.");
+    linhas.push("3.4 Dimensionamento de meios preventivos e tramitacao junto ao Infoscip.");
+    linhas.push("3.5 Elaboracao do projeto hidrossanitario de abastecimento e esgotamento.");
+    linhas.push("3.6 Elaboracao de NB de acordo com parametros da PMU e Cartorio e PGRCC.");
+    linhas.push("3.7 "+visitas);
+    linhas.push("");
+    linhas.push("RUA JAMIL TANNUS N. 533 - B. LIDICE - UBERLANDIA MG (34) 3219.7318");
+    linhas.push("");
+    linhas.push("CONDICOES DE PAGAMENTO:");
+    linhas.push("- "+cond);
+    linhas.push("");
+    linhas.push("PRAZOS");
+    linhas.push("- "+prazo);
+    linhas.push("");
+    linhas.push("CONDICOES GERAIS");
+    linhas.push("- Caso ocorra rescisao do contrato, devera ser pago o valor proporcional ate a data.");
+    linhas.push("- Esta proposta e valida por 15 (quinze) dias corridos.");
+    linhas.push("- Nao inclusos taxas de analise e vistoria.");
+    linhas.push("");
+    linhas.push("RUA JAMIL TANNUS N. 533 - B. LIDICE - UBERLANDIA MG (34) 3219.7318");
+    const txt=linhas.join("\n");
+    const blob=new Blob([txt],{type:"text/plain;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download="Orcamento-"+clienteNome.split(" ")[0]+".txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const stepLabel=["Cliente","Servicos","Valores","Gerar"];
+  return(<div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Orcamentos</h2>
+      {step>1&&<button onClick={()=>setStep(step-1)} style={{background:"none",border:"none",color:C.accent,fontSize:14,cursor:"pointer"}}>Voltar</button>}
+    </div>
+    <div style={{display:"flex",gap:6,marginBottom:20}}>
+      {stepLabel.map((s,i)=>(
+        <div key={i} style={{flex:1,padding:"8px 4px",borderRadius:8,textAlign:"center",background:step===i+1?C.accentDim:step>i+1?"#0a2e1a":C.surface,border:"1px solid "+(step===i+1?C.accent:step>i+1?C.success:C.border)}}>
+          <span style={{fontSize:10,fontWeight:700,color:step===i+1?C.accentText:step>i+1?C.success:C.textMuted}}>{step>i+1?"✓ ":""}{s}</span>
+        </div>
+      ))}
+    </div>
+
+    {step===1&&<div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Dados da Proposta</h3>
+        <Fld label="Numero"><Inp value={num} onChange={setNum} placeholder="Ex: 43R1"/></Fld>
+        <Fld label="Data"><Inp value={data} onChange={setData} placeholder="01 de junho de 2026"/></Fld>
+      </div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Cliente</h3>
+        <Fld label="Selecionar cadastrado">
+          <select value={clienteId} onChange={e=>{const c=clients.find(x=>x.id===+e.target.value);setClienteId(e.target.value);if(c){setClienteNome(c.name);setClienteEnd((c.city||"")+"/"+(c.state||""));}}}
+            style={{width:"100%",padding:"14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:16,outline:"none",minHeight:48}}>
+            <option value="">Selecione ou preencha abaixo...</option>
+            {clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </Fld>
+        <Fld label="Nome do Cliente"><Inp value={clienteNome} onChange={setClienteNome} placeholder="Nome ou razao social"/></Fld>
+        <Fld label="Endereco"><Inp value={clienteEnd} onChange={setClienteEnd} placeholder="Bairro - Cidade UF"/></Fld>
+      </div>
+      <Btn full primary onClick={()=>{if(!clienteNome)return alert("Preencha o cliente!");setStep(2);}}>Proximo</Btn>
+    </div>}
+
+    {step===2&&<div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 4px",fontSize:14,fontWeight:800,color:C.text}}>Servicos</h3>
+        <p style={{margin:"0 0 14px",fontSize:12,color:C.textMuted}}>Marque os servicos do orcamento</p>
+        {servicos.map((s,i)=>(
+          <div key={s.id} style={{marginBottom:14,paddingBottom:14,borderBottom:"1px solid "+C.border}}>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:s.ativo?10:0}}>
+              <div onClick={()=>toggleS(i)} style={{width:26,height:26,borderRadius:6,border:"2px solid "+(s.ativo?C.accent:C.border),background:s.ativo?C.accentDim:"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+                {s.ativo&&<span style={{color:C.accent,fontSize:16,fontWeight:900,lineHeight:1}}>✓</span>}
+              </div>
+              <span style={{fontSize:15,fontWeight:s.ativo?700:400,color:s.ativo?C.text:C.textMuted,cursor:"pointer"}} onClick={()=>toggleS(i)}>{s.nome}</span>
+            </div>
+            {s.ativo&&<div style={{marginLeft:38}}>
+              <textarea value={s.obs} onChange={e=>updateObs(i,e.target.value)} rows={2}
+                style={{width:"100%",padding:"10px",background:C.bg,border:"1px solid "+C.border,borderRadius:8,color:C.text,fontSize:14,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+            </div>}
+          </div>
+        ))}
+      </div>
+      <Btn full primary onClick={()=>{if(ativos.length===0)return alert("Selecione pelo menos 1 servico!");setStep(3);}}>Proximo</Btn>
+    </div>}
+
+    {step===3&&<div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Honorarios</h3>
+        <Fld label="Valor Total (R$)"><Inp value={valorTotal} onChange={setValorTotal} placeholder="Ex: 19.000,00"/></Fld>
+        <Fld label="Valor por Extenso"><Inp value={valorExtenso} onChange={setValorExtenso} placeholder="Ex: dezenove mil reais"/></Fld>
+      </div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Condicoes de Pagamento</h3>
+        {CONDS.map((c,i)=>(
+          <div key={i} onClick={()=>setCond(c)} style={{padding:"10px 14px",borderRadius:8,marginBottom:8,border:"1px solid "+(cond===c?C.accent:C.border),background:cond===c?C.accentDim:C.bg,cursor:"pointer"}}>
+            <p style={{margin:0,fontSize:12,color:cond===c?C.accentText:C.textMuted}}>{c}</p>
+          </div>
+        ))}
+        <Fld label="Personalizar:">
+          <textarea value={cond} onChange={e=>setCond(e.target.value)} rows={3}
+            style={{width:"100%",padding:"10px",background:C.bg,border:"1px solid "+C.border,borderRadius:8,color:C.text,fontSize:14,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+        </Fld>
+      </div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <Fld label="Prazo de entrega">
+          <textarea value={prazo} onChange={e=>setPrazo(e.target.value)} rows={3}
+            style={{width:"100%",padding:"10px",background:C.bg,border:"1px solid "+C.border,borderRadius:8,color:C.text,fontSize:14,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+        </Fld>
+        <Fld label="Visitas tecnicas">
+          <textarea value={visitas} onChange={e=>setVisitas(e.target.value)} rows={2}
+            style={{width:"100%",padding:"10px",background:C.bg,border:"1px solid "+C.border,borderRadius:8,color:C.text,fontSize:14,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+        </Fld>
+      </div>
+      <Btn full primary onClick={()=>setStep(4)}>Proximo</Btn>
+    </div>}
+
+    {step===4&&<div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Revisao</h3>
+        <div style={{padding:"10px 0",borderBottom:"1px solid "+C.border}}>
+          <p style={{margin:0,fontSize:11,color:C.textMuted}}>Proposta</p>
+          <p style={{margin:0,fontSize:14,fontWeight:700,color:C.text}}>{"PR"+num+" — "+data}</p>
+        </div>
+        <div style={{padding:"10px 0",borderBottom:"1px solid "+C.border}}>
+          <p style={{margin:0,fontSize:11,color:C.textMuted}}>Cliente</p>
+          <p style={{margin:0,fontSize:14,fontWeight:700,color:C.text}}>{clienteNome}</p>
+        </div>
+        <div style={{padding:"10px 0",borderBottom:"1px solid "+C.border}}>
+          <p style={{margin:"0 0 6px",fontSize:11,color:C.textMuted}}>{"Servicos ("+ativos.length+")"}</p>
+          {ativos.map(s=><div key={s.id} style={{display:"flex",gap:6,marginBottom:4}}><span style={{color:C.success}}>✓</span><span style={{fontSize:13,color:C.text}}>{s.nome}</span></div>)}
+        </div>
+        <div style={{padding:"10px 0"}}>
+          <p style={{margin:0,fontSize:11,color:C.textMuted}}>Valor Total</p>
+          <p style={{margin:0,fontSize:22,fontWeight:900,color:C.success}}>{"R$ "+valorTotal}</p>
+          <p style={{margin:0,fontSize:12,color:C.textMuted}}>{valorExtenso}</p>
+        </div>
+      </div>
+      <div style={{background:"#0a2e1a",border:"1px solid "+C.success+"44",borderRadius:12,padding:16,marginBottom:14}}>
+        <p style={{margin:"0 0 4px",fontSize:13,fontWeight:700,color:C.success}}>Gerar Documento</p>
+        <p style={{margin:0,fontSize:12,color:C.textMuted}}>Baixa um arquivo .txt formatado. Abra no Word, formate e exporte como PDF.</p>
+      </div>
+      <Btn full primary onClick={baixar} style={{marginBottom:12}}>Baixar Orcamento</Btn>
+      <Btn full onClick={()=>{setStep(1);setNum("");setClienteNome("");setClienteEnd("");setClienteId("");setServicos(SERVICOS_PADRAO.map(s=>({...s,ativo:false,obs:s.obs})));setValorTotal("");setValorExtenso("");}}>Novo Orcamento</Btn>
+    </div>}
+  </div>);
+};
 const NAV=[
   {k:"dashboard",l:"Início",ic:"📊"},
   {k:"clientes",l:"Clientes",ic:"👥"},
@@ -757,6 +968,7 @@ const NAV=[
   {k:"documentos",l:"Docs",ic:"📁"},
   {k:"laudos",l:"Laudos",ic:"📋"},
   {k:"relatorios",l:"Relatórios",ic:"📈"},
+  {k:"orcamentos",l:"Orçamento",ic:"📄"},
   {k:"financeiro",l:"Financeiro",ic:"💰"},
 ];
 function App(){
@@ -796,6 +1008,7 @@ function App(){
           {page==="documentos"&&<Documentos projects={projects}/>}
           {page==="laudos"&&<Laudos laudos={laudos} clients={clients} reload={loadAll}/>}
           {page==="relatorios"&&<Relatorios receivables={receivables} payables={payables} projects={projects} clients={clients}/>}
+          {page==="orcamentos"&&<Orcamentos clients={clients}/>}
           {page==="financeiro"&&<Financial receivables={receivables} payables={payables} clients={clients} projects={projects} reload={loadAll}/>}
         </>}
       </div>
