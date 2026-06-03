@@ -1051,7 +1051,7 @@ const Orcamentos = ({clients}) => {
         <Fld label="Selecionar cliente cadastrado">
           <select value={form.client_id} onChange={e=>{
             const c=clients.find(c=>c.id===+e.target.value);
-            setForm(p=>({...p,client_id:e.target.value,cliente_nome:c?.name||"",cliente_end:`${c?.city||""}/${c?.state||""}`}));
+            setForm(p=>({...p,client_id:e.target.value,cliente_nome:c?.name||"",cliente_end:(c?.city||"")+"/"+(c?.state||"")}));
           }} style={{width:"100%",padding:"14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,color:C.text,fontSize:16,outline:"none",minHeight:48}}>
             <option value="">Selecione ou preencha abaixo...</option>
             {clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
