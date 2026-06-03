@@ -7,30 +7,31 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0a0a0a; color: #f0f0f0; font-family: 'Inter', system-ui, sans-serif; }
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: #111; }
-  ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-  input, select, textarea, button { font-family: inherit; }
-  input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0a0a; color: #f0f0f0; font-family: 'Inter', system-ui, sans-serif; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+input, select, textarea, button { font-family: inherit; }
+input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState } = React;
-
+const { useState, useEffect } = React;
+const SURL = "https://sreatrvvgxooddhkbago.supabase.co";
+const SKEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyZWF0cnZ2Z3hvb2RkaGtiYWdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MzUxNjUsImV4cCI6MjA5NjAxMTE2NX0.SOS84j22J7lsIzTaUu-SheVV__d87_YUhhP24puKZvU";
+const sb = supabase.createClient(SURL, SKEY);
 const C = {
   bg:"#0a0a0a",surface:"#111111",surfaceHover:"#181818",border:"#222222",
-  borderHover:"#333333",text:"#f0f0f0",textMuted:"#888888",textFaint:"#3a3a3a",
+  text:"#f0f0f0",textMuted:"#888888",textFaint:"#3a3a3a",
   accent:"#E8A020",accentDim:"#2a1a00",accentText:"#F5C060",
   success:"#22C55E",successBg:"#0a2e1a",warning:"#F59E0B",warningBg:"#2a1a00",
-  danger:"#EF4444",dangerBg:"#2a0a0a",info:"#3B82F6",infoBg:"#0a1a3a",
-  graphite:"#161616",white:"#ffffff"
+  danger:"#EF4444",info:"#3B82F6",infoBg:"#0a1a3a",graphite:"#161616"
 };
-
 const SC = {
   "Orçamento":{color:"#64748b",bg:"#1e2533"},"Contratado":{color:"#3B82F6",bg:"#0a1a3a"},
   "Em desenvolvimento":{color:"#8B5CF6",bg:"#1a0a3a"},"Revisão":{color:"#F59E0B",bg:"#2a1a00"},
@@ -40,61 +41,13 @@ const SC = {
   "DAT emitida":{color:"#06B6D4",bg:"#001a2a"},"Adequação":{color:"#F59E0B",bg:"#2a1a00"},
   "AVCB emitido":{color:"#22C55E",bg:"#0a2e1a"},
 };
-
-const fmt = v => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v);
+const fmt = v => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v||0);
 const fmtD = d => d ? new Date(d+"T12:00:00").toLocaleDateString("pt-BR") : "-";
 const TODAY = new Date();
-
-const INIT = {
-  clients:[
-    {id:1,name:"Construtora Horizonte Ltda",type:"PJ",doc:"12.345.678/0001-90",phone:"(34) 99812-3456",email:"contato@horizonte.com.br",city:"Uberlândia",state:"MG",address:"Av. João Pinheiro, 800",obs:"Cliente premium."},
-    {id:2,name:"Ricardo Alves Ferreira",type:"PF",doc:"123.456.789-00",phone:"(34) 98765-4321",email:"ricardo@email.com",city:"Uberlândia",state:"MG",address:"Rua das Acácias, 45",obs:""},
-    {id:3,name:"Shopping Triângulo SA",type:"PJ",doc:"98.765.432/0001-10",phone:"(34) 3232-5500",email:"engenharia@triangulo.com.br",city:"Uberlândia",state:"MG",address:"Av. Rondon Pacheco, 4500",obs:"PPCI do shopping."},
-    {id:4,name:"Hospital Santa Clara",type:"PJ",doc:"11.222.333/0001-44",phone:"(34) 3215-9000",email:"obras@santaclara.com.br",city:"Patos de Minas",state:"MG",address:"Rua Monteiro Lobato, 200",obs:"Ampliação UTI."},
-  ],
-  projects:[
-    {id:1,code:"PRJ-2024-001",clientId:1,type:"PPCI",responsible:"Eng. Paulo Lima",value:45000,startDate:"2024-01-15",deadline:"2024-06-30",status:"Aprovado",description:"PPCI — Edifício Residencial Morada das Flores"},
-    {id:2,code:"PRJ-2024-002",clientId:2,type:"Arquitetônico",responsible:"Arq. Sofia Castro",value:18000,startDate:"2024-03-01",deadline:"2024-09-15",status:"Em desenvolvimento",description:"Projeto arquitetônico residencial 280m²"},
-    {id:3,code:"PRJ-2024-003",clientId:3,type:"PPCI",responsible:"Eng. Paulo Lima",value:120000,startDate:"2024-02-10",deadline:"2024-12-31",status:"Em análise",description:"Revisão PPCI — Shopping Triângulo"},
-    {id:4,code:"PRJ-2024-004",clientId:4,type:"Estrutural",responsible:"Eng. Marcos Vidal",value:65000,startDate:"2024-04-01",deadline:"2025-03-31",status:"Contratado",description:"Estrutural ampliação UTI — Hospital Santa Clara"},
-    {id:5,code:"PRJ-2024-005",clientId:1,type:"Hidrossanitário",responsible:"Eng. Ana Torres",value:22000,startDate:"2024-05-10",deadline:"2024-11-10",status:"Em desenvolvimento",description:"Hidrossanitário — Residencial Bosque Verde"},
-  ],
-  laudos:[
-    {id:1,type:"Inspeção Predial",clientId:3,address:"Av. Rondon Pacheco, 4500",responsible:"Eng. Paulo Lima",surveyDate:"2024-05-20",deliveryDate:"2024-06-20",value:8500,status:"Em desenvolvimento"},
-    {id:2,type:"SPDA",clientId:4,address:"Rua Monteiro Lobato, 200",responsible:"Eng. Marcos Vidal",surveyDate:"2024-06-01",deliveryDate:"2024-07-01",value:4200,status:"Concluído"},
-    {id:3,type:"Estrutural",clientId:1,address:"Rua dos Ipês, 120",responsible:"Eng. Marcos Vidal",surveyDate:"2024-06-10",deliveryDate:"2024-07-10",value:6000,status:"Revisão"},
-  ],
-  pscip:[
-    {id:1,clientId:3,address:"Av. Rondon Pacheco, 4500",area:42000,height:28,occupation:"Shopping Center",responsible:"Eng. Paulo Lima",pscipNumber:"PSCIP-2024-0891",status:"Em análise"},
-    {id:2,clientId:1,address:"Rua das Flores, 1200",area:3600,height:45,occupation:"Residencial Multifamiliar",responsible:"Eng. Paulo Lima",pscipNumber:"PSCIP-2024-1023",status:"Aprovado"},
-  ],
-  obras:[
-    {id:1,clientId:2,projectId:2,address:"Rua das Acácias, 45",responsible:"Eng. Ana Torres",visits:4,status:"Em andamento",pendencies:["Definição acabamentos internos","Aprovação planta prefeitura"]},
-    {id:2,clientId:4,projectId:4,address:"Rua Monteiro Lobato, 200",responsible:"Eng. Marcos Vidal",visits:2,status:"Iniciando",pendencies:["Demolição parede divisória"]},
-  ],
-  financials:{
-    receivables:[
-      {id:1,clientId:1,projectId:1,description:"Parcela 3/3 — PRJ-2024-001",value:15000,dueDate:"2024-06-30",status:"Pendente"},
-      {id:2,clientId:2,projectId:2,description:"Parcela 1/3 — PRJ-2024-002",value:6000,dueDate:"2024-05-15",status:"Recebido"},
-      {id:3,clientId:3,projectId:3,description:"Sinal — PRJ-2024-003",value:30000,dueDate:"2024-06-15",status:"Recebido"},
-      {id:4,clientId:4,projectId:4,description:"Parcela 1/4 — PRJ-2024-004",value:16250,dueDate:"2024-07-01",status:"Pendente"},
-      {id:5,clientId:1,projectId:5,description:"Sinal — PRJ-2024-005",value:7333,dueDate:"2024-05-20",status:"Recebido"},
-    ],
-    payables:[
-      {id:1,category:"Equipe",description:"Salários Junho",value:18000,dueDate:"2024-06-30",status:"Pendente"},
-      {id:2,category:"Softwares",description:"Licença AutoCAD + Revit",value:890,dueDate:"2024-06-15",status:"Pago"},
-      {id:3,category:"CREA",description:"Anuidade CREA-MG",value:720,dueDate:"2024-06-20",status:"Pago"},
-      {id:4,category:"Impostos",description:"ISS + DAS Junho",value:4200,dueDate:"2024-07-05",status:"Pendente"},
-      {id:5,category:"Terceiros",description:"Consultoria Elétrica",value:2500,dueDate:"2024-06-25",status:"Pendente"},
-    ],
-  },
-};
-
 const Badge = ({text}) => {
   const cfg=SC[text]||{color:"#888",bg:"#1a1a1a"};
   return <span style={{display:"inline-flex",alignItems:"center",padding:"3px 10px",borderRadius:6,fontSize:11,fontWeight:700,color:cfg.color,background:cfg.bg,border:`1px solid ${cfg.color}33`,whiteSpace:"nowrap"}}>{text}</span>;
 };
-
 const StatCard = ({label,value,sub,icon,color=C.accent,hl}) => (
   <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:"18px 20px",display:"flex",flexDirection:"column",gap:6,borderTop:hl?`2px solid ${color}`:`1px solid ${C.border}`}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -105,79 +58,68 @@ const StatCard = ({label,value,sub,icon,color=C.accent,hl}) => (
     {sub&&<div style={{fontSize:11,color:C.textMuted}}>{sub}</div>}
   </div>
 );
-
-const Btn = ({children,onClick,style={},primary,small}) => (
-  <button onClick={onClick} style={{background:primary?C.accent:C.border,color:primary?"#000":C.text,border:"none",borderRadius:8,padding:small?"7px 14px":"10px 18px",fontSize:small?12:13,fontWeight:700,cursor:"pointer",...style}}>{children}</button>
+const Btn = ({children,onClick,style={},primary,small,danger}) => (
+  <button onClick={onClick} style={{background:primary?C.accent:danger?C.danger:C.border,color:primary?"#000":C.text,border:"none",borderRadius:8,padding:small?"7px 14px":"10px 18px",fontSize:small?12:13,fontWeight:700,cursor:"pointer",...style}}>{children}</button>
 );
-
 const Inp = ({value,onChange,placeholder,type="text"}) => (
   <input type={type} value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
     style={{width:"100%",padding:"10px 14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,color:C.text,fontSize:13,outline:"none",boxSizing:"border-box"}}
-    onFocus={e=>e.target.style.borderColor=C.accent} onBlur={e=>e.target.style.borderColor=C.border}
-  />
+    onFocus={e=>e.target.style.borderColor=C.accent} onBlur={e=>e.target.style.borderColor=C.border}/>
 );
-
 const Sel = ({value,onChange,options}) => (
   <select value={value||""} onChange={e=>onChange(e.target.value)}
     style={{width:"100%",padding:"10px 14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,color:C.text,fontSize:13,outline:"none",cursor:"pointer"}}>
+    <option value="">Selecione...</option>
     {options.map(o=><option key={o.value||o} value={o.value!==undefined?o.value:o}>{o.label||o}</option>)}
   </select>
 );
-
 const Fld = ({label,children}) => (
   <div style={{marginBottom:14}}>
     <label style={{display:"block",fontSize:11,fontWeight:700,color:C.textMuted,marginBottom:5,textTransform:"uppercase",letterSpacing:"0.05em"}}>{label}</label>
     {children}
   </div>
 );
-
 const G2 = ({children}) => <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>{children}</div>;
-
 const Modal = ({title,onClose,children}) => (
   <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>e.target===e.currentTarget&&onClose()}>
     <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:14,width:"min(640px,96vw)",maxHeight:"88vh",overflowY:"auto",padding:28}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
         <h3 style={{margin:0,fontSize:17,fontWeight:800,color:C.text}}>{title}</h3>
-        <button onClick={onClose} style={{background:C.border,border:"none",borderRadius:6,color:C.text,width:32,height:32,fontSize:18,cursor:"pointer"}}>×</button>
+        <button onClick={onClose} style={{background:C.border,border:"none",borderRadius:6,color:C.text,width:32,height:32,fontSize:18,cursor:"pointer"}}>x</button>
       </div>
       {children}
     </div>
   </div>
 );
-
 const Tbl = ({cols,rows}) => (
   <div style={{overflowX:"auto",borderRadius:10,border:`1px solid ${C.border}`}}>
     <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-      <thead>
-        <tr style={{background:C.graphite}}>
-          {cols.map((c,i)=><th key={i} style={{padding:"11px 14px",textAlign:"left",color:C.textMuted,fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em",borderBottom:`1px solid ${C.border}`,whiteSpace:"nowrap"}}>{c}</th>)}
-        </tr>
-      </thead>
+      <thead><tr style={{background:C.graphite}}>
+        {cols.map((c,i)=><th key={i} style={{padding:"11px 14px",textAlign:"left",color:C.textMuted,fontSize:11,fontWeight:700,textTransform:"uppercase",borderBottom:`1px solid ${C.border}`,whiteSpace:"nowrap"}}>{c}</th>)}
+      </tr></thead>
       <tbody>
         {rows.map((row,i)=>(
           <tr key={i} style={{borderBottom:`1px solid ${C.border}`}} onMouseEnter={e=>e.currentTarget.style.background=C.surfaceHover} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
             {row.map((cell,j)=><td key={j} style={{padding:"12px 14px",color:C.text,verticalAlign:"middle"}}>{cell}</td>)}
           </tr>
         ))}
-        {rows.length===0&&<tr><td colSpan={cols.length} style={{padding:32,textAlign:"center",color:C.textMuted}}>Nenhum registro</td></tr>}
+        {rows.length===0&&<tr><td colSpan={cols.length} style={{padding:32,textAlign:"center",color:C.textMuted}}>Nenhum registro encontrado</td></tr>}
       </tbody>
     </table>
   </div>
 );
-
 const PBar = ({value,max,color=C.accent}) => {
-  const pct=Math.min(100,Math.round((value/max)*100));
+  const pct=max>0?Math.min(100,Math.round((value/max)*100)):0;
   return <div style={{background:C.border,borderRadius:4,height:5}}><div style={{width:`${pct}%`,height:"100%",background:color,borderRadius:4}}/></div>;
 };
+const Loading = () => <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:60,color:C.textMuted,fontSize:14}}>Carregando dados...</div>;
 
-const Dashboard = ({data}) => {
-  const pendRec=data.financials.receivables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
-  const pendPay=data.financials.payables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
-  const monRec=data.financials.receivables.filter(r=>r.status==="Recebido").reduce((s,r)=>s+r.value,0);
-  const monExp=data.financials.payables.filter(r=>r.status==="Pago").reduce((s,r)=>s+r.value,0);
-  const active=data.projects.filter(p=>!["Concluído","Orçamento"].includes(p.status));
-  const monthData=[{m:"Jan",r:42000,d:22000},{m:"Fev",r:38000,d:19500},{m:"Mar",r:55000,d:24000},{m:"Abr",r:61000,d:21000},{m:"Mai",r:49500,d:23500},{m:"Jun",r:monRec,d:monExp}];
-  const mx=Math.max(...monthData.flatMap(x=>[x.r,x.d]));
+const Dashboard = ({clients,projects,laudos,receivables,payables}) => {
+  const pendRec=receivables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
+  const pendPay=payables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
+  const monRec=receivables.filter(r=>r.status==="Recebido").reduce((s,r)=>s+r.value,0);
+  const monExp=payables.filter(r=>r.status==="Pago").reduce((s,r)=>s+r.value,0);
+  const active=projects.filter(p=>!["Concluido","Orcamento"].includes(p.status));
   return (
     <div>
       <div style={{marginBottom:28}}>
@@ -185,363 +127,411 @@ const Dashboard = ({data}) => {
         <p style={{color:C.textMuted,margin:0,fontSize:13}}>{TODAY.toLocaleDateString("pt-BR",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</p>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:14,marginBottom:28}}>
-        <StatCard label="Projetos Ativos" value={active.length} sub="Em execução" icon="📐" hl/>
-        <StatCard label="Laudos Pendentes" value={data.laudos.filter(l=>l.status!=="Concluído").length} sub="Em elaboração" icon="📋" color={C.info} hl/>
-        <StatCard label="PSCIP CBMMG" value={data.pscip.filter(p=>p.status==="Em análise").length} sub="Em análise" icon="🔥" color={C.warning}/>
-        <StatCard label="Aprovados" value={data.projects.filter(p=>p.status==="Aprovado").length} sub="Este ano" icon="✅" color={C.success}/>
-        <StatCard label="Receita do Mês" value={fmt(monRec)} sub="Recebimentos" icon="💰" color={C.success} hl/>
-        <StatCard label="Despesas do Mês" value={fmt(monExp)} sub="Pagamentos" icon="📤" color={C.danger}/>
+        <StatCard label="Projetos Ativos" value={active.length} sub="Em execucao" icon="📐" hl/>
+        <StatCard label="Clientes" value={clients.length} sub="Cadastrados" icon="👥" color={C.info} hl/>
+        <StatCard label="Laudos" value={laudos.filter(l=>l.status!=="Concluido").length} sub="Pendentes" icon="📋" color={C.info}/>
+        <StatCard label="Aprovados" value={projects.filter(p=>p.status==="Aprovado").length} sub="Este ano" icon="✅" color={C.success}/>
+        <StatCard label="Receita Recebida" value={fmt(monRec)} sub="Recebimentos" icon="💰" color={C.success} hl/>
+        <StatCard label="Despesas Pagas" value={fmt(monExp)} sub="Pagamentos" icon="📤" color={C.danger}/>
         <StatCard label="A Receber" value={fmt(pendRec)} sub="Pendente" icon="📥" color={C.accentText} hl/>
         <StatCard label="A Pagar" value={fmt(pendPay)} sub="Pendente" icon="⚠️" color={C.warning}/>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"3fr 2fr",gap:20,marginBottom:20}}>
-        <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:"20px 24px"}}>
-          <h3 style={{margin:"0 0 18px",fontSize:14,fontWeight:800,color:C.text}}>Fluxo de Caixa — 2024</h3>
-          <div style={{display:"flex",alignItems:"flex-end",gap:10,height:150}}>
-            {monthData.map((m,i)=>(
-              <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-                <div style={{display:"flex",gap:3,alignItems:"flex-end",height:120}}>
-                  <div style={{width:16,borderRadius:"4px 4px 0 0",height:`${(m.r/mx)*112}px`,background:i===5?C.success:C.success+"99"}}/>
-                  <div style={{width:16,borderRadius:"4px 4px 0 0",height:`${(m.d/mx)*112}px`,background:i===5?C.danger:C.danger+"99"}}/>
-                </div>
-                <span style={{fontSize:10,color:C.textMuted}}>{m.m}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{display:"flex",gap:16,marginTop:10}}>
-            <div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:10,height:10,borderRadius:2,background:C.success}}/><span style={{fontSize:11,color:C.textMuted}}>Receitas</span></div>
-            <div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:10,height:10,borderRadius:2,background:C.danger}}/><span style={{fontSize:11,color:C.textMuted}}>Despesas</span></div>
-          </div>
-        </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:20}}>
         <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-          <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>⚡ Alertas de Vencimento</h3>
-          {[...data.financials.receivables.filter(r=>r.status==="Pendente").map(r=>({text:`A receber: ${fmt(r.value)}`,sub:`Vence ${fmtD(r.dueDate)}`,color:C.success})),...data.financials.payables.filter(p=>p.status==="Pendente").map(p=>({text:`${p.description}: ${fmt(p.value)}`,sub:`Vence ${fmtD(p.dueDate)}`,color:C.warning}))].slice(0,5).map((a,i)=>(
-            <div key={i} style={{padding:"9px 12px",borderRadius:8,background:C.bg,border:`1px solid ${a.color}33`,borderLeft:`3px solid ${a.color}`,marginBottom:8}}>
-              <p style={{margin:"0 0 2px",fontSize:12,color:C.text,fontWeight:600}}>{a.text}</p>
-              <p style={{margin:0,fontSize:11,color:C.textMuted}}>{a.sub}</p>
+          <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Alertas de Vencimento</h3>
+          {receivables.filter(r=>r.status==="Pendente").slice(0,3).map((r,i)=>(
+            <div key={i} style={{padding:"9px 12px",borderRadius:8,background:C.bg,border:`1px solid ${C.success}33`,borderLeft:`3px solid ${C.success}`,marginBottom:8}}>
+              <p style={{margin:"0 0 2px",fontSize:12,color:C.text,fontWeight:600}}>A receber: {fmt(r.value)}</p>
+              <p style={{margin:0,fontSize:11,color:C.textMuted}}>Vence {fmtD(r.due_date)}</p>
             </div>
           ))}
+          {payables.filter(p=>p.status==="Pendente").slice(0,2).map((p,i)=>(
+            <div key={i} style={{padding:"9px 12px",borderRadius:8,background:C.bg,border:`1px solid ${C.warning}33`,borderLeft:`3px solid ${C.warning}`,marginBottom:8}}>
+              <p style={{margin:"0 0 2px",fontSize:12,color:C.text,fontWeight:600}}>{p.description}: {fmt(p.value)}</p>
+              <p style={{margin:0,fontSize:11,color:C.textMuted}}>Vence {fmtD(p.due_date)}</p>
+            </div>
+          ))}
+          {receivables.filter(r=>r.status==="Pendente").length===0&&<p style={{color:C.textMuted,fontSize:13}}>Nenhum vencimento pendente</p>}
         </div>
-      </div>
-      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:"20px 24px"}}>
-        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Projetos em Andamento</h3>
-        <Tbl cols={["Código","Cliente","Tipo","Responsável","Valor","Prazo","Status"]}
-          rows={active.map(p=>{const cl=data.clients.find(c=>c.id===p.clientId);return[<span style={{fontFamily:"monospace",color:C.accent,fontSize:12}}>{p.code}</span>,cl?.name.split(" ").slice(0,2).join(" "),p.type,p.responsible.replace("Eng. ","").replace("Arq. ",""),<span style={{color:C.success,fontWeight:700}}>{fmt(p.value)}</span>,fmtD(p.deadline),<Badge text={p.status}/>];})}
-        />
+        <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
+          <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Projetos Recentes</h3>
+          {projects.slice(0,5).map(p=>(
+            <div key={p.id} style={{padding:"9px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><p style={{margin:0,fontSize:13,fontWeight:700,color:C.text}}>{p.code}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{p.type}</p></div>
+              <Badge text={p.status}/>
+            </div>
+          ))}
+          {projects.length===0&&<p style={{color:C.textMuted,fontSize:13}}>Nenhum projeto cadastrado</p>}
+        </div>
       </div>
     </div>
   );
 };
 
-const Clients = ({data,setData}) => {
+const Clients = ({clients,projects,laudos,receivables,reload}) => {
   const [search,setSearch]=useState("");
   const [modal,setModal]=useState(false);
   const [sel,setSel]=useState(null);
-  const [form,setForm]=useState({name:"",type:"PF",doc:"",phone:"",email:"",city:"",state:"MG",address:"",obs:""});
-  const list=data.clients.filter(c=>c.name.toLowerCase().includes(search.toLowerCase())||c.doc.includes(search));
+  const [form,setForm]=useState({});
+  const [loading,setLoading]=useState(false);
+  const list=clients.filter(c=>c.name?.toLowerCase().includes(search.toLowerCase())||c.doc?.includes(search));
   const sf=k=>v=>setForm(p=>({...p,[k]:v}));
-  const save=()=>{if(!form.name)return;setData(d=>({...d,clients:[...d.clients.filter(c=>c.id!==form.id),{...form,id:form.id||Date.now()}]}));setModal(false);setSel(null);};
+  const save=async()=>{
+    if(!form.name)return alert("Nome obrigatorio!");
+    setLoading(true);
+    const d={name:form.name,type:form.type||"PF",doc:form.doc,phone:form.phone,email:form.email,city:form.city,state:form.state||"MG",address:form.address,obs:form.obs};
+    if(form.id){await sb.from("clients").update(d).eq("id",form.id);}
+    else{await sb.from("clients").insert(d);}
+    await reload(); setLoading(false); setModal(false); setSel(null);
+  };
+  const del=async(id)=>{
+    if(!confirm("Excluir cliente?"))return;
+    await sb.from("clients").delete().eq("id",id);
+    await reload(); setSel(null);
+  };
   if(sel){
-    const sp=data.projects.filter(p=>p.clientId===sel.id);
-    const totalR=data.financials.receivables.filter(r=>r.clientId===sel.id&&r.status==="Recebido").reduce((s,r)=>s+r.value,0);
+    const sp=projects.filter(p=>p.client_id===sel.id);
+    const totalR=receivables.filter(r=>r.client_id===sel.id&&r.status==="Recebido").reduce((s,r)=>s+r.value,0);
     return(<div>
       <button onClick={()=>setSel(null)} style={{background:"none",border:`1px solid ${C.border}`,color:C.textMuted,padding:"7px 14px",borderRadius:8,cursor:"pointer",marginBottom:22,fontSize:13}}>← Voltar</button>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22}}>
         <div><h1 style={{fontSize:24,fontWeight:900,color:C.text,margin:"0 0 4px"}}>{sel.name}</h1><p style={{color:C.textMuted,margin:0,fontSize:13}}>{sel.doc}</p></div>
-        <Btn primary onClick={()=>{setForm({...sel});setModal(true);}}>Editar</Btn>
+        <div style={{display:"flex",gap:10}}>
+          <Btn primary onClick={()=>{setForm({...sel});setModal(true);}}>Editar</Btn>
+          <Btn danger onClick={()=>del(sel.id)}>Excluir</Btn>
+        </div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:22}}>
         <StatCard label="Projetos" value={sp.length} icon="📐"/>
-        <StatCard label="Laudos" value={data.laudos.filter(l=>l.clientId===sel.id).length} icon="📋" color={C.info}/>
+        <StatCard label="Laudos" value={laudos.filter(l=>l.client_id===sel.id).length} icon="📋" color={C.info}/>
         <StatCard label="Total Recebido" value={fmt(totalR)} icon="💰" color={C.success}/>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
         <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
           <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.text}}>Contato</h3>
-          {[["📞","Telefone",sel.phone],["📧","E-mail",sel.email],["📍","Endereço",sel.address],["🏙️","Cidade",`${sel.city}/${sel.state}`]].map(([ic,l,v])=>(
+          {[["Telefone",sel.phone],["Email",sel.email],["Endereco",sel.address],["Cidade",`${sel.city||""}/${sel.state||""}`]].map(([l,v])=>(
             <div key={l} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.border}`}}>
-              <span style={{fontSize:12,color:C.textMuted}}>{ic} {l}</span><span style={{fontSize:12,color:C.text}}>{v}</span>
+              <span style={{fontSize:12,color:C.textMuted}}>{l}</span><span style={{fontSize:12,color:C.text}}>{v||"-"}</span>
             </div>
           ))}
         </div>
         <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
           <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.text}}>Projetos</h3>
-          {sp.map(p=>(<div key={p.id} style={{padding:"9px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div><p style={{margin:0,fontSize:13,fontWeight:700,color:C.text}}>{p.code}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{p.type}</p></div>
-            <Badge text={p.status}/>
-          </div>))}
+          {sp.length===0?<p style={{color:C.textMuted,fontSize:13}}>Nenhum projeto</p>:sp.map(p=>(
+            <div key={p.id} style={{padding:"9px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><p style={{margin:0,fontSize:13,fontWeight:700,color:C.text}}>{p.code}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{p.type}</p></div>
+              <Badge text={p.status}/>
+            </div>
+          ))}
         </div>
       </div>
       {modal&&<Modal title="Editar Cliente" onClose={()=>setModal(false)}>
-        <G2><Fld label="Nome"><Inp value={form.name} onChange={sf("name")}/></Fld><Fld label="Tipo"><Sel value={form.type} onChange={sf("type")} options={[{value:"PF",label:"Pessoa Física"},{value:"PJ",label:"Pessoa Jurídica"}]}/></Fld></G2>
-        <G2><Fld label="CPF/CNPJ"><Inp value={form.doc} onChange={sf("doc")}/></Fld><Fld label="Telefone"><Inp value={form.phone} onChange={sf("phone")}/></Fld></G2>
-        <Fld label="E-mail"><Inp value={form.email} onChange={sf("email")}/></Fld>
-        <Fld label="Endereço"><Inp value={form.address} onChange={sf("address")}/></Fld>
-        <G2><Fld label="Cidade"><Inp value={form.city} onChange={sf("city")}/></Fld><Fld label="UF"><Inp value={form.state} onChange={sf("state")}/></Fld></G2>
-        <div style={{display:"flex",gap:12,marginTop:8}}><Btn primary onClick={save} style={{flex:1}}>Salvar</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+        <G2><Fld label="Nome"><Inp value={form.name||""} onChange={sf("name")}/></Fld><Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={[{value:"PF",label:"Pessoa Fisica"},{value:"PJ",label:"Pessoa Juridica"}]}/></Fld></G2>
+        <G2><Fld label="CPF/CNPJ"><Inp value={form.doc||""} onChange={sf("doc")}/></Fld><Fld label="Telefone"><Inp value={form.phone||""} onChange={sf("phone")}/></Fld></G2>
+        <Fld label="Email"><Inp value={form.email||""} onChange={sf("email")}/></Fld>
+        <Fld label="Endereco"><Inp value={form.address||""} onChange={sf("address")}/></Fld>
+        <G2><Fld label="Cidade"><Inp value={form.city||""} onChange={sf("city")}/></Fld><Fld label="UF"><Inp value={form.state||""} onChange={sf("state")}/></Fld></G2>
+        <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>{loading?"Salvando...":"Salvar"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
       </Modal>}
     </div>);
   }
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
       <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Clientes</h2>
-      <Btn primary onClick={()=>{setForm({name:"",type:"PF",doc:"",phone:"",email:"",city:"",state:"MG",address:"",obs:""});setModal(true);}}>+ Novo Cliente</Btn>
+      <Btn primary onClick={()=>{setForm({type:"PF",state:"MG"});setModal(true);}}>+ Novo Cliente</Btn>
     </div>
     <div style={{marginBottom:18}}><Inp value={search} onChange={setSearch} placeholder="Buscar por nome, CPF/CNPJ..."/></div>
-    <Tbl cols={["Nome","Tipo","CPF/CNPJ","Telefone","E-mail","Cidade","Projetos"]}
-      rows={list.map(c=>[<span style={{fontWeight:700,color:C.text,cursor:"pointer",textDecoration:"underline",textDecorationColor:C.textFaint}} onClick={()=>setSel(c)}>{c.name}</span>,<span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:c.type==="PJ"?C.infoBg:C.graphite,color:c.type==="PJ"?C.info:C.textMuted}}>{c.type}</span>,c.doc,c.phone,c.email,`${c.city}/${c.state}`,<span style={{color:C.accent,fontWeight:800}}>{data.projects.filter(p=>p.clientId===c.id).length}</span>])}
+    <Tbl cols={["Nome","Tipo","CPF/CNPJ","Telefone","Email","Cidade","Projetos",""]}
+      rows={list.map(c=>[
+        <span style={{fontWeight:700,color:C.text,cursor:"pointer",textDecoration:"underline"}} onClick={()=>setSel(c)}>{c.name}</span>,
+        <span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:c.type==="PJ"?C.infoBg:C.graphite,color:c.type==="PJ"?C.info:C.textMuted}}>{c.type}</span>,
+        c.doc,c.phone,c.email,`${c.city||""}/${c.state||""}`,
+        <span style={{color:C.accent,fontWeight:800}}>{projects.filter(p=>p.client_id===c.id).length}</span>,
+        <button onClick={()=>del(c.id)} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:16}}>🗑️</button>
+      ])}
     />
     {modal&&<Modal title="Novo Cliente" onClose={()=>setModal(false)}>
-      <G2><Fld label="Nome"><Inp value={form.name} onChange={sf("name")} placeholder="Nome completo"/></Fld><Fld label="Tipo"><Sel value={form.type} onChange={sf("type")} options={[{value:"PF",label:"Pessoa Física"},{value:"PJ",label:"Pessoa Jurídica"}]}/></Fld></G2>
-      <G2><Fld label="CPF/CNPJ"><Inp value={form.doc} onChange={sf("doc")}/></Fld><Fld label="Telefone"><Inp value={form.phone} onChange={sf("phone")}/></Fld></G2>
-      <Fld label="E-mail"><Inp value={form.email} onChange={sf("email")}/></Fld>
-      <Fld label="Endereço"><Inp value={form.address} onChange={sf("address")}/></Fld>
-      <G2><Fld label="Cidade"><Inp value={form.city} onChange={sf("city")}/></Fld><Fld label="UF"><Inp value={form.state} onChange={sf("state")}/></Fld></G2>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>Salvar Cliente</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+      <G2><Fld label="Nome Completo"><Inp value={form.name||""} onChange={sf("name")} placeholder="Nome"/></Fld><Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={[{value:"PF",label:"Pessoa Fisica"},{value:"PJ",label:"Pessoa Juridica"}]}/></Fld></G2>
+      <G2><Fld label="CPF/CNPJ"><Inp value={form.doc||""} onChange={sf("doc")}/></Fld><Fld label="Telefone"><Inp value={form.phone||""} onChange={sf("phone")} placeholder="(34) 99999-9999"/></Fld></G2>
+      <Fld label="Email"><Inp value={form.email||""} onChange={sf("email")}/></Fld>
+      <Fld label="Endereco"><Inp value={form.address||""} onChange={sf("address")}/></Fld>
+      <G2><Fld label="Cidade"><Inp value={form.city||""} onChange={sf("city")}/></Fld><Fld label="UF"><Inp value={form.state||""} onChange={sf("state")}/></Fld></G2>
+      <Fld label="Observacoes"><textarea value={form.obs||""} onChange={e=>sf("obs")(e.target.value)} rows={3} style={{width:"100%",padding:"10px 14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,color:C.text,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box"}}/></Fld>
+      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>{loading?"Salvando...":"Salvar Cliente"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
     </Modal>}
   </div>);
 };
 
-const Projects = ({data,setData}) => {
+const Projects = ({projects,clients,receivables,reload}) => {
   const [filter,setFilter]=useState("Todos");
   const [modal,setModal]=useState(false);
-  const [sel,setSel]=useState(null);
   const [form,setForm]=useState({});
-  const PSTYPES=["Arquitetônico","Estrutural","Hidrossanitário","Elétrico","PPCI","SPDA","Regularização","Compatibilização"];
-  const STATUSES=["Orçamento","Contratado","Em desenvolvimento","Revisão","Protocolado","Em análise","Aprovado","Concluído"];
-  const filtered=filter==="Todos"?data.projects:data.projects.filter(p=>p.status===filter);
+  const [loading,setLoading]=useState(false);
+  const PSTYPES=["Arquitetonico","Estrutural","Hidrossanitario","Eletrico","PPCI","SPDA","Regularizacao","Compatibilizacao"];
+  const STATUSES=["Orcamento","Contratado","Em desenvolvimento","Revisao","Protocolado","Em analise","Aprovado","Concluido"];
+  const filtered=filter==="Todos"?projects:projects.filter(p=>p.status===filter);
   const sf=k=>v=>setForm(p=>({...p,[k]:v}));
-  const save=()=>{if(!form.code)return;setData(d=>({...d,projects:[...d.projects.filter(p=>p.id!==form.id),{...form,id:form.id||Date.now(),value:+form.value}]}));setModal(false);setSel(null);};
+  const save=async()=>{
+    if(!form.code||!form.client_id)return alert("Codigo e cliente sao obrigatorios!");
+    setLoading(true);
+    const d={code:form.code,client_id:+form.client_id,type:form.type,responsible:form.responsible,value:+form.value||0,start_date:form.start_date||null,deadline:form.deadline||null,status:form.status||"Orcamento",description:form.description};
+    if(form.id){await sb.from("projects").update(d).eq("id",form.id);}
+    else{await sb.from("projects").insert(d);}
+    await reload(); setLoading(false); setModal(false);
+  };
+  const del=async(id)=>{
+    if(!confirm("Excluir projeto?"))return;
+    await sb.from("projects").delete().eq("id",id);
+    await reload();
+  };
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
       <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Projetos</h2>
-      <Btn primary onClick={()=>{setForm({code:`PRJ-2024-00${data.projects.length+1}`,clientId:data.clients[0]?.id,type:"Arquitetônico",status:"Orçamento",value:""});setSel(null);setModal(true);}}>+ Novo Projeto</Btn>
+      <Btn primary onClick={()=>{setForm({status:"Orcamento",type:"Arquitetonico"});setModal(true);}}>+ Novo Projeto</Btn>
     </div>
     <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:20}}>
-      {["Todos",...STATUSES].map(s=><button key={s} onClick={()=>setFilter(s)} style={{padding:"5px 14px",borderRadius:20,fontSize:12,fontWeight:700,cursor:"pointer",border:`1px solid ${filter===s?C.accent:C.border}`,background:filter===s?C.accentDim:"transparent",color:filter===s?C.accentText:C.textMuted}}>{s}{s!=="Todos"&&` (${data.projects.filter(p=>p.status===s).length})`}</button>)}
+      {["Todos",...STATUSES].map(s=><button key={s} onClick={()=>setFilter(s)} style={{padding:"5px 14px",borderRadius:20,fontSize:12,fontWeight:700,cursor:"pointer",border:`1px solid ${filter===s?C.accent:C.border}`,background:filter===s?C.accentDim:"transparent",color:filter===s?C.accentText:C.textMuted}}>{s}{s!=="Todos"&&` (${projects.filter(p=>p.status===s).length})`}</button>)}
     </div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
       {filtered.map(p=>{
-        const cl=data.clients.find(c=>c.id===p.clientId);
-        const dl=new Date(p.deadline+"T12:00:00");
-        const days=Math.ceil((dl-TODAY)/(1000*60*60*24));
-        const recv=data.financials.receivables.filter(r=>r.projectId===p.id&&r.status==="Recebido").reduce((s,r)=>s+r.value,0);
-        return(<div key={p.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:18,cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.accent+"66"} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border} onClick={()=>{setForm({...p,value:String(p.value)});setSel(p);setModal(true);}}>
+        const cl=clients.find(c=>c.id===p.client_id);
+        const recv=receivables.filter(r=>r.project_id===p.id&&r.status==="Recebido").reduce((s,r)=>s+r.value,0);
+        return(<div key={p.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:18}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.accent+"66"} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
             <div><span style={{fontFamily:"monospace",fontSize:11,color:C.accent}}>{p.code}</span><h3 style={{margin:"3px 0 0",fontSize:14,fontWeight:800,color:C.text}}>{p.type}</h3></div>
             <Badge text={p.status}/>
           </div>
-          <p style={{margin:"0 0 2px",fontSize:13,color:C.text,fontWeight:600}}>{cl?.name.split(" ").slice(0,3).join(" ")}</p>
+          <p style={{margin:"0 0 2px",fontSize:13,color:C.text,fontWeight:600}}>{cl?.name||"Cliente nao encontrado"}</p>
           <p style={{margin:"0 0 14px",fontSize:12,color:C.textMuted}}>{p.responsible}</p>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:11,color:C.textMuted}}>Progresso financeiro</span><span style={{fontSize:11,color:C.text}}>{Math.round((recv/p.value)*100)}%</span></div>
-          <PBar value={recv} max={p.value}/>
-          <div style={{display:"flex",justifyContent:"space-between",marginTop:12}}><span style={{fontSize:11,color:C.textMuted}}>Prazo: {fmtD(p.deadline)}</span><span style={{fontSize:11,fontWeight:700,color:days<30?C.danger:days<60?C.warning:C.textMuted}}>{days>0?`${days}d restantes`:`${Math.abs(days)}d atrasado`}</span></div>
-          <div style={{marginTop:12,paddingTop:12,borderTop:`1px solid ${C.border}`}}><span style={{fontSize:13,fontWeight:800,color:C.success}}>{fmt(p.value)}</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:11,color:C.textMuted}}>Progresso financeiro</span><span style={{fontSize:11,color:C.text}}>{p.value>0?Math.round((recv/p.value)*100):0}%</span></div>
+          <PBar value={recv} max={p.value||1}/>
+          <div style={{marginTop:12,paddingTop:12,borderTop:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:13,fontWeight:800,color:C.success}}>{fmt(p.value)}</span>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>{setForm({...p,client_id:String(p.client_id),value:String(p.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:16}}>✏️</button>
+              <button onClick={()=>del(p.id)} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:16}}>🗑️</button>
+            </div>
+          </div>
         </div>);
       })}
+      {filtered.length===0&&<div style={{gridColumn:"1/-1",padding:40,textAlign:"center",color:C.textMuted}}>Nenhum projeto encontrado</div>}
     </div>
-    {modal&&<Modal title={sel?`Editar — ${sel.code}`:"Novo Projeto"} onClose={()=>{setModal(false);setSel(null);}}>
-      <G2><Fld label="Código"><Inp value={form.code||""} onChange={sf("code")}/></Fld><Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={STATUSES}/></Fld></G2>
-      <G2><Fld label="Cliente"><Sel value={form.clientId||""} onChange={sf("clientId")} options={data.clients.map(c=>({value:c.id,label:c.name}))}/></Fld><Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={PSTYPES}/></Fld></G2>
-      <G2><Fld label="Responsável"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld><Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld></G2>
-      <G2><Fld label="Início"><Inp value={form.startDate||""} onChange={sf("startDate")} type="date"/></Fld><Fld label="Prazo"><Inp value={form.deadline||""} onChange={sf("deadline")} type="date"/></Fld></G2>
-      <Fld label="Descrição"><textarea value={form.description||""} onChange={e=>sf("description")(e.target.value)} rows={3} style={{width:"100%",padding:"10px 14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,color:C.text,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box"}}/></Fld>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>Salvar</Btn><Btn onClick={()=>{setModal(false);setSel(null);}}>Cancelar</Btn></div>
+    {modal&&<Modal title={form.id?"Editar Projeto":"Novo Projeto"} onClose={()=>setModal(false)}>
+      <G2><Fld label="Codigo"><Inp value={form.code||""} onChange={sf("code")} placeholder="PRJ-2024-001"/></Fld><Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={STATUSES}/></Fld></G2>
+      <G2><Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld><Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={PSTYPES}/></Fld></G2>
+      <G2><Fld label="Responsavel Tecnico"><Inp value={form.responsible||""} onChange={sf("responsible")} placeholder="Eng. Nome"/></Fld><Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld></G2>
+      <G2><Fld label="Data de Inicio"><Inp value={form.start_date||""} onChange={sf("start_date")} type="date"/></Fld><Fld label="Prazo de Entrega"><Inp value={form.deadline||""} onChange={sf("deadline")} type="date"/></Fld></G2>
+      <Fld label="Descricao"><textarea value={form.description||""} onChange={e=>sf("description")(e.target.value)} rows={3} style={{width:"100%",padding:"10px 14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,color:C.text,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box"}}/></Fld>
+      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>{loading?"Salvando...":"Salvar Projeto"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
     </Modal>}
   </div>);
 };
 
-const Laudos = ({data,setData}) => {
+const Laudos = ({laudos,clients,reload}) => {
   const [modal,setModal]=useState(false);
-  const [form,setForm]=useState({type:"Inspeção Predial",clientId:"",address:"",responsible:"",surveyDate:"",deliveryDate:"",value:"",status:"Em desenvolvimento"});
-  const TYPES=["Inspeção Predial","Estrutural","Patologia","SPDA","AVCB","NR12","Acessibilidade"];
+  const [form,setForm]=useState({});
+  const [loading,setLoading]=useState(false);
+  const TYPES=["Inspecao Predial","Estrutural","Patologia","SPDA","AVCB","NR12","Acessibilidade"];
   const sf=k=>v=>setForm(p=>({...p,[k]:v}));
-  const save=()=>{setData(d=>({...d,laudos:[...d.laudos,{...form,id:Date.now(),value:+form.value}]}));setModal(false);};
+  const save=async()=>{
+    if(!form.client_id)return alert("Cliente obrigatorio!");
+    setLoading(true);
+    const d={type:form.type,client_id:+form.client_id,address:form.address,responsible:form.responsible,survey_date:form.survey_date||null,delivery_date:form.delivery_date||null,value:+form.value||0,status:form.status||"Em desenvolvimento"};
+    if(form.id){await sb.from("laudos").update(d).eq("id",form.id);}
+    else{await sb.from("laudos").insert(d);}
+    await reload(); setLoading(false); setModal(false);
+  };
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-      <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Laudos Técnicos</h2>
-      <Btn primary onClick={()=>setModal(true)}>+ Novo Laudo</Btn>
+      <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Laudos Tecnicos</h2>
+      <Btn primary onClick={()=>{setForm({status:"Em desenvolvimento",type:"Inspecao Predial"});setModal(true);}}>+ Novo Laudo</Btn>
     </div>
-    <Tbl cols={["Tipo","Cliente","Endereço","Responsável","Vistoria","Entrega","Valor","Status"]}
-      rows={data.laudos.map(l=>{const cl=data.clients.find(c=>c.id===l.clientId);return[<span style={{fontWeight:700}}>{l.type}</span>,cl?.name.split(" ").slice(0,2).join(" "),l.address,l.responsible,fmtD(l.surveyDate),fmtD(l.deliveryDate),<span style={{color:C.success,fontWeight:700}}>{fmt(l.value)}</span>,<Badge text={l.status}/>];})}
+    <Tbl cols={["Tipo","Cliente","Endereco","Responsavel","Vistoria","Entrega","Valor","Status",""]}
+      rows={laudos.map(l=>{
+        const cl=clients.find(c=>c.id===l.client_id);
+        return[<span style={{fontWeight:700}}>{l.type}</span>,cl?.name||"-",l.address||"-",l.responsible||"-",fmtD(l.survey_date),fmtD(l.delivery_date),<span style={{color:C.success,fontWeight:700}}>{fmt(l.value)}</span>,<Badge text={l.status}/>,
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>{setForm({...l,client_id:String(l.client_id),value:String(l.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info}}>✏️</button>
+            <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("laudos").delete().eq("id",l.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger}}>🗑️</button>
+          </div>];
+      })}
     />
-    {modal&&<Modal title="Novo Laudo" onClose={()=>setModal(false)}>
-      <G2><Fld label="Tipo"><Sel value={form.type} onChange={sf("type")} options={TYPES}/></Fld><Fld label="Status"><Sel value={form.status} onChange={sf("status")} options={["Em desenvolvimento","Revisão","Concluído"]}/></Fld></G2>
-      <Fld label="Cliente"><Sel value={form.clientId} onChange={sf("clientId")} options={data.clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
-      <Fld label="Endereço"><Inp value={form.address} onChange={sf("address")}/></Fld>
-      <Fld label="Responsável"><Inp value={form.responsible} onChange={sf("responsible")}/></Fld>
-      <G2><Fld label="Data Vistoria"><Inp value={form.surveyDate} onChange={sf("surveyDate")} type="date"/></Fld><Fld label="Prazo Entrega"><Inp value={form.deliveryDate} onChange={sf("deliveryDate")} type="date"/></Fld></G2>
-      <Fld label="Valor (R$)"><Inp value={form.value} onChange={sf("value")} type="number"/></Fld>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>Salvar</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+    {modal&&<Modal title={form.id?"Editar Laudo":"Novo Laudo"} onClose={()=>setModal(false)}>
+      <G2><Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={TYPES}/></Fld><Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Em desenvolvimento","Revisao","Concluido"]}/></Fld></G2>
+      <Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
+      <Fld label="Endereco"><Inp value={form.address||""} onChange={sf("address")}/></Fld>
+      <Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld>
+      <G2><Fld label="Data Vistoria"><Inp value={form.survey_date||""} onChange={sf("survey_date")} type="date"/></Fld><Fld label="Prazo Entrega"><Inp value={form.delivery_date||""} onChange={sf("delivery_date")} type="date"/></Fld></G2>
+      <Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld>
+      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>{loading?"Salvando...":"Salvar"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
     </Modal>}
   </div>);
 };
 
-const PSCIP = ({data,setData}) => {
-  const [modal,setModal]=useState(false);
-  const [form,setForm]=useState({clientId:"",address:"",area:"",height:"",occupation:"",responsible:"",pscipNumber:"",status:"Levantamento"});
-  const STATUSES=["Levantamento","Em projeto","Protocolado","Em análise","DAT emitida","Adequação","Aprovado","AVCB emitido"];
-  const sf=k=>v=>setForm(p=>({...p,[k]:v}));
-  const save=()=>{setData(d=>({...d,pscip:[...d.pscip,{...form,id:Date.now(),area:+form.area,height:+form.height}]}));setModal(false);};
-  return(<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-      <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>PSCIP — CBMMG</h2>
-      <Btn primary onClick={()=>setModal(true)}>+ Novo PSCIP</Btn>
-    </div>
-    <div style={{display:"flex",gap:10,overflowX:"auto",marginBottom:24,paddingBottom:4}}>
-      {STATUSES.map(s=>{const cfg=SC[s]||{};return(<div key={s} style={{minWidth:130,background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"12px 14px",borderTop:`3px solid ${cfg.color||C.border}`,flexShrink:0}}><p style={{margin:"0 0 6px",fontSize:10,color:C.textMuted,fontWeight:700,textTransform:"uppercase",whiteSpace:"nowrap"}}>{s}</p><p style={{margin:0,fontSize:26,fontWeight:900,color:cfg.color||C.text}}>{data.pscip.filter(p=>p.status===s).length}</p></div>);})}
-    </div>
-    {data.pscip.map(p=>{
-      const cl=data.clients.find(c=>c.id===p.clientId);
-      const curr=STATUSES.indexOf(p.status);
-      return(<div key={p.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:22,marginBottom:16}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
-          <div><h3 style={{margin:"0 0 4px",fontSize:16,fontWeight:800,color:C.text}}>{cl?.name}</h3><p style={{margin:0,fontSize:12,color:C.textMuted}}>{p.address} · {p.area.toLocaleString("pt-BR")}m² · H:{p.height}m · {p.occupation}</p></div>
-          <div style={{textAlign:"right"}}><Badge text={p.status}/>{p.pscipNumber&&<p style={{margin:"5px 0 0",fontSize:11,color:C.textMuted,fontFamily:"monospace"}}>{p.pscipNumber}</p>}</div>
-        </div>
-        <div style={{display:"flex",alignItems:"center"}}>
-          {STATUSES.map((s,i)=>{const cfg=SC[s]||{};const done=i<=curr;return(<div key={s} style={{flex:1,display:"flex",alignItems:"center"}}><div style={{width:10,height:10,borderRadius:"50%",background:done?cfg.color:C.border,flexShrink:0}} title={s}/>{i<STATUSES.length-1&&<div style={{flex:1,height:2,background:done&&i<curr?cfg.color:C.border}}/>}</div>);})}
-        </div>
-      </div>);
-    })}
-    {modal&&<Modal title="Novo PSCIP" onClose={()=>setModal(false)}>
-      <Fld label="Cliente"><Sel value={form.clientId} onChange={sf("clientId")} options={data.clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
-      <Fld label="Endereço"><Inp value={form.address} onChange={sf("address")}/></Fld>
-      <G2><Fld label="Área (m²)"><Inp value={form.area} onChange={sf("area")} type="number"/></Fld><Fld label="Altura (m)"><Inp value={form.height} onChange={sf("height")} type="number"/></Fld></G2>
-      <Fld label="Ocupação"><Inp value={form.occupation} onChange={sf("occupation")}/></Fld>
-      <G2><Fld label="Responsável"><Inp value={form.responsible} onChange={sf("responsible")}/></Fld><Fld label="Status"><Sel value={form.status} onChange={sf("status")} options={STATUSES}/></Fld></G2>
-      <Fld label="Número PSCIP"><Inp value={form.pscipNumber} onChange={sf("pscipNumber")} placeholder="PSCIP-2024-XXXX"/></Fld>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>Salvar</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
-    </Modal>}
-  </div>);
-};
-
-const Financial = ({data}) => {
+const Financial = ({receivables,payables,clients,projects,reload}) => {
   const [tab,setTab]=useState("rec");
-  const pRec=data.financials.receivables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
-  const pPay=data.financials.payables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
-  const tRec=data.financials.receivables.filter(r=>r.status==="Recebido").reduce((s,r)=>s+r.value,0);
-  const tPay=data.financials.payables.filter(r=>r.status==="Pago").reduce((s,r)=>s+r.value,0);
-  const cats={};data.financials.payables.forEach(p=>{cats[p.category]=(cats[p.category]||0)+p.value;});
-  const totCat=Object.values(cats).reduce((s,v)=>s+v,0);
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({});
+  const [loading,setLoading]=useState(false);
+  const sf=k=>v=>setForm(p=>({...p,[k]:v}));
+  const pRec=receivables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
+  const pPay=payables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
+  const tRec=receivables.filter(r=>r.status==="Recebido").reduce((s,r)=>s+r.value,0);
+  const tPay=payables.filter(r=>r.status==="Pago").reduce((s,r)=>s+r.value,0);
+  const CATS=["Equipe","Terceiros","Softwares","CREA","Impostos","Combustivel","Marketing","Equipamentos"];
+  const saveRec=async()=>{
+    if(!form.description||!form.value)return alert("Preencha descricao e valor!");
+    setLoading(true);
+    const d={client_id:+form.client_id||null,project_id:+form.project_id||null,description:form.description,value:+form.value,due_date:form.due_date||null,status:form.status||"Pendente"};
+    if(form.id){await sb.from("financials_receivables").update(d).eq("id",form.id);}
+    else{await sb.from("financials_receivables").insert(d);}
+    await reload(); setLoading(false); setModal(false);
+  };
+  const savePay=async()=>{
+    if(!form.description||!form.value)return alert("Preencha descricao e valor!");
+    setLoading(true);
+    const d={category:form.category||"Outros",description:form.description,value:+form.value,due_date:form.due_date||null,status:form.status||"Pendente"};
+    if(form.id){await sb.from("financials_payables").update(d).eq("id",form.id);}
+    else{await sb.from("financials_payables").insert(d);}
+    await reload(); setLoading(false); setModal(false);
+  };
   return(<div>
-    <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:"0 0 22px"}}>Gestão Financeira</h2>
+    <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:"0 0 22px"}}>Gestao Financeira</h2>
     <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:26}}>
       <StatCard label="A Receber" value={fmt(pRec)} icon="📥" color={C.success} hl/>
       <StatCard label="A Pagar" value={fmt(pPay)} icon="📤" color={C.danger} hl/>
       <StatCard label="Recebido" value={fmt(tRec)} icon="💚" color={C.success}/>
-      <StatCard label="Saldo Líquido" value={fmt(tRec-tPay)} icon={tRec>=tPay?"📈":"📉"} color={tRec>=tPay?C.success:C.danger} hl/>
+      <StatCard label="Saldo Liquido" value={fmt(tRec-tPay)} icon={tRec>=tPay?"📈":"📉"} color={tRec>=tPay?C.success:C.danger} hl/>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:22}}>
-      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-        <h3 style={{margin:"0 0 16px",fontSize:14,fontWeight:800,color:C.text}}>Despesas por Categoria</h3>
-        {Object.entries(cats).map(([cat,val])=>(<div key={cat} style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{fontSize:13,color:C.text}}>{cat}</span><span style={{fontSize:13,color:C.textMuted}}>{fmt(val)}</span></div><PBar value={val} max={totCat} color={C.warning}/></div>))}
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <div style={{display:"flex",gap:4,background:C.graphite,borderRadius:10,padding:4}}>
+        {[["rec","Contas a Receber"],["pay","Contas a Pagar"]].map(([k,l])=>(
+          <button key={k} onClick={()=>setTab(k)} style={{padding:"8px 20px",borderRadius:8,border:"none",cursor:"pointer",background:tab===k?C.surface:"transparent",color:tab===k?C.text:C.textMuted,fontSize:13,fontWeight:700}}>{l}</button>
+        ))}
       </div>
-      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-        <h3 style={{margin:"0 0 16px",fontSize:14,fontWeight:800,color:C.text}}>Resumo Mensal</h3>
-        {[{label:"Receita Total",value:tRec,color:C.success},{label:"Despesa Total",value:tPay,color:C.danger},{label:"Lucro Bruto",value:tRec-tPay,color:tRec>=tPay?C.success:C.danger},{label:"Margem",value:tRec>0?`${Math.round(((tRec-tPay)/tRec)*100)}%`:"—",color:C.info,raw:true}].map(r=>(<div key={r.label} style={{display:"flex",justifyContent:"space-between",padding:"12px 0",borderBottom:`1px solid ${C.border}`}}><span style={{fontSize:13,color:C.textMuted}}>{r.label}</span><span style={{fontSize:15,fontWeight:800,color:r.color}}>{r.raw?r.value:fmt(r.value)}</span></div>))}
-      </div>
+      <Btn primary small onClick={()=>{setForm({status:"Pendente"});setModal(true);}}>+ {tab==="rec"?"Recebimento":"Pagamento"}</Btn>
     </div>
-    <div style={{display:"flex",gap:4,marginBottom:16,background:C.graphite,borderRadius:10,padding:4,width:"fit-content"}}>
-      {[["rec","Contas a Receber"],["pay","Contas a Pagar"]].map(([k,l])=>(<button key={k} onClick={()=>setTab(k)} style={{padding:"8px 20px",borderRadius:8,border:"none",cursor:"pointer",background:tab===k?C.surface:"transparent",color:tab===k?C.text:C.textMuted,fontSize:13,fontWeight:700}}>{l}</button>))}
-    </div>
-    {tab==="rec"&&<Tbl cols={["Descrição","Cliente","Projeto","Valor","Vencimento","Status"]} rows={data.financials.receivables.map(r=>{const cl=data.clients.find(c=>c.id===r.clientId);const pj=data.projects.find(p=>p.id===r.projectId);return[r.description,cl?.name.split(" ").slice(0,2).join(" "),<span style={{fontFamily:"monospace",fontSize:11,color:C.accent}}>{pj?.code}</span>,<span style={{color:C.success,fontWeight:800}}>{fmt(r.value)}</span>,fmtD(r.dueDate),<span style={{color:r.status==="Recebido"?C.success:C.warning,fontWeight:700,fontSize:12}}>{r.status}</span>];})}/>}
-    {tab==="pay"&&<Tbl cols={["Categoria","Descrição","Valor","Vencimento","Status"]} rows={data.financials.payables.map(p=>[<span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:C.graphite,color:C.textMuted}}>{p.category}</span>,p.description,<span style={{color:C.danger,fontWeight:800}}>{fmt(p.value)}</span>,fmtD(p.dueDate),<span style={{color:p.status==="Pago"?C.success:C.warning,fontWeight:700,fontSize:12}}>{p.status}</span>])}/>}
+    {tab==="rec"&&<Tbl cols={["Descricao","Cliente","Projeto","Valor","Vencimento","Status",""]}
+      rows={receivables.map(r=>{
+        const cl=clients.find(c=>c.id===r.client_id);
+        const pj=projects.find(p=>p.id===r.project_id);
+        return[r.description,cl?.name?.split(" ").slice(0,2).join(" ")||"-",<span style={{fontFamily:"monospace",fontSize:11,color:C.accent}}>{pj?.code||"-"}</span>,<span style={{color:C.success,fontWeight:800}}>{fmt(r.value)}</span>,fmtD(r.due_date),<span style={{color:r.status==="Recebido"?C.success:C.warning,fontWeight:700,fontSize:12}}>{r.status}</span>,
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>{setForm({...r,client_id:String(r.client_id||""),project_id:String(r.project_id||""),value:String(r.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info}}>✏️</button>
+            <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("financials_receivables").delete().eq("id",r.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger}}>🗑️</button>
+          </div>];
+      })}
+    />}
+    {tab==="pay"&&<Tbl cols={["Categoria","Descricao","Valor","Vencimento","Status",""]}
+      rows={payables.map(p=>[
+        <span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:C.graphite,color:C.textMuted}}>{p.category}</span>,
+        p.description,<span style={{color:C.danger,fontWeight:800}}>{fmt(p.value)}</span>,fmtD(p.due_date),<span style={{color:p.status==="Pago"?C.success:C.warning,fontWeight:700,fontSize:12}}>{p.status}</span>,
+        <div style={{display:"flex",gap:6}}>
+          <button onClick={()=>{setForm({...p,value:String(p.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info}}>✏️</button>
+          <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("financials_payables").delete().eq("id",p.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger}}>🗑️</button>
+        </div>
+      ])}
+    />}
+    {modal&&tab==="rec"&&<Modal title={form.id?"Editar Recebimento":"Novo Recebimento"} onClose={()=>setModal(false)}>
+      <Fld label="Descricao"><Inp value={form.description||""} onChange={sf("description")} placeholder="Ex: Parcela 1/3"/></Fld>
+      <G2><Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld><Fld label="Projeto"><Sel value={form.project_id||""} onChange={sf("project_id")} options={projects.map(p=>({value:p.id,label:p.code}))}/></Fld></G2>
+      <G2><Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld><Fld label="Vencimento"><Inp value={form.due_date||""} onChange={sf("due_date")} type="date"/></Fld></G2>
+      <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Pendente","Recebido","Cancelado"]}/></Fld>
+      <div style={{display:"flex",gap:12}}><Btn primary onClick={saveRec} style={{flex:1}}>{loading?"Salvando...":"Salvar"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+    </Modal>}
+    {modal&&tab==="pay"&&<Modal title={form.id?"Editar Pagamento":"Novo Pagamento"} onClose={()=>setModal(false)}>
+      <G2><Fld label="Categoria"><Sel value={form.category||""} onChange={sf("category")} options={CATS}/></Fld><Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Pendente","Pago","Cancelado"]}/></Fld></G2>
+      <Fld label="Descricao"><Inp value={form.description||""} onChange={sf("description")} placeholder="Ex: Salarios Junho"/></Fld>
+      <G2><Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld><Fld label="Vencimento"><Inp value={form.due_date||""} onChange={sf("due_date")} type="date"/></Fld></G2>
+      <div style={{display:"flex",gap:12}}><Btn primary onClick={savePay} style={{flex:1}}>{loading?"Salvando...":"Salvar"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+    </Modal>}
   </div>);
 };
 
-const Obras = ({data}) => (
-  <div>
-    <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:"0 0 22px"}}>Acompanhamento de Obras</h2>
+const Obras = ({obras,clients,projects,reload}) => {
+  const [modal,setModal]=useState(false);
+  const [form,setForm]=useState({});
+  const [loading,setLoading]=useState(false);
+  const sf=k=>v=>setForm(p=>({...p,[k]:v}));
+  const save=async()=>{
+    if(!form.client_id)return alert("Cliente obrigatorio!");
+    setLoading(true);
+    const d={client_id:+form.client_id,project_id:+form.project_id||null,address:form.address,responsible:form.responsible,visits:+form.visits||0,status:form.status||"Iniciando"};
+    if(form.id){await sb.from("obras").update(d).eq("id",form.id);}
+    else{await sb.from("obras").insert(d);}
+    await reload(); setLoading(false); setModal(false);
+  };
+  return(<div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
+      <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Acompanhamento de Obras</h2>
+      <Btn primary onClick={()=>{setForm({status:"Iniciando",visits:"0"});setModal(true);}}>+ Nova Obra</Btn>
+    </div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
-      {data.obras.map(o=>{const cl=data.clients.find(c=>c.id===o.clientId);const pj=data.projects.find(p=>p.id===o.projectId);return(<div key={o.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-        <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}><div><h3 style={{margin:0,fontSize:15,fontWeight:800,color:C.text}}>{cl?.name}</h3><p style={{margin:"2px 0 0",fontSize:12,color:C.textMuted}}>{o.address}</p></div><span style={{padding:"4px 10px",borderRadius:6,background:C.infoBg,color:C.info,fontSize:11,fontWeight:700}}>{o.status}</span></div>
-        <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,display:"flex",justifyContent:"space-between"}}><div><p style={{margin:0,fontSize:11,color:C.textMuted}}>Responsável</p><p style={{margin:0,fontSize:13,color:C.text,fontWeight:600}}>{o.responsible}</p></div><div style={{textAlign:"right"}}><p style={{margin:0,fontSize:11,color:C.textMuted}}>Visitas</p><p style={{margin:0,fontSize:24,fontWeight:900,color:C.accent}}>{o.visits}</p></div></div>
-        {o.pendencies?.length>0&&<div style={{marginTop:12,padding:"10px 12px",background:C.warningBg,borderRadius:8,border:`1px solid ${C.warning}33`}}><p style={{margin:"0 0 4px",fontSize:11,fontWeight:700,color:C.warning}}>⚠️ {o.pendencies.length} pendência(s)</p>{o.pendencies.map((pd,i)=><p key={i} style={{margin:"2px 0 0",fontSize:11,color:C.warning+"cc"}}>· {pd}</p>)}</div>}
-        {pj&&<p style={{margin:"10px 0 0",fontSize:11,color:C.textFaint,fontFamily:"monospace"}}>↗ {pj.code} — {pj.type}</p>}
-      </div>);})}
+      {obras.map(o=>{
+        const cl=clients.find(c=>c.id===o.client_id);
+        const pj=projects.find(p=>p.id===o.project_id);
+        return(<div key={o.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
+            <div><h3 style={{margin:0,fontSize:15,fontWeight:800,color:C.text}}>{cl?.name||"-"}</h3><p style={{margin:"2px 0 0",fontSize:12,color:C.textMuted}}>{o.address}</p></div>
+            <span style={{padding:"4px 10px",borderRadius:6,background:C.infoBg,color:C.info,fontSize:11,fontWeight:700}}>{o.status}</span>
+          </div>
+          <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,display:"flex",justifyContent:"space-between"}}>
+            <div><p style={{margin:0,fontSize:11,color:C.textMuted}}>Responsavel</p><p style={{margin:0,fontSize:13,color:C.text,fontWeight:600}}>{o.responsible||"-"}</p></div>
+            <div style={{textAlign:"right"}}><p style={{margin:0,fontSize:11,color:C.textMuted}}>Visitas</p><p style={{margin:0,fontSize:24,fontWeight:900,color:C.accent}}>{o.visits||0}</p></div>
+          </div>
+          {pj&&<p style={{margin:"10px 0 0",fontSize:11,color:C.textFaint,fontFamily:"monospace"}}>Projeto: {pj.code}</p>}
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            <button onClick={()=>{setForm({...o,client_id:String(o.client_id),project_id:String(o.project_id||""),visits:String(o.visits||0)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:13}}>✏️ Editar</button>
+            <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("obras").delete().eq("id",o.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:13}}>🗑️ Excluir</button>
+          </div>
+        </div>);
+      })}
+      {obras.length===0&&<div style={{gridColumn:"1/-1",padding:40,textAlign:"center",color:C.textMuted}}>Nenhuma obra cadastrada</div>}
     </div>
-  </div>
-);
-
-const Documents = ({data}) => {
-  const [folder,setFolder]=useState("Todos");
-  const FOLDERS=["Todos","Contrato","PDFs","DWGs","ARTs","Memoriais","Aprovações","Prefeitura","CBMMG","Fotos"];
-  const DOCS=[{name:"Contrato_Assinado.pdf",folder:"Contrato",size:"2.4 MB",date:"2024-01-15",type:"pdf",ver:"v1"},{name:"Planta_Pavimento_Tipo.dwg",folder:"DWGs",size:"8.1 MB",date:"2024-03-10",type:"dwg",ver:"v3"},{name:"ART_Paulo_Lima.pdf",folder:"ARTs",size:"0.5 MB",date:"2024-01-20",type:"pdf",ver:"v1"},{name:"Memorial_Descritivo_v2.docx",folder:"Memoriais",size:"1.2 MB",date:"2024-04-05",type:"docx",ver:"v2"},{name:"Planta_Humanizada.pdf",folder:"PDFs",size:"4.8 MB",date:"2024-05-12",type:"pdf",ver:"v2"},{name:"Oficio_Prefeitura.pdf",folder:"Prefeitura",size:"0.8 MB",date:"2024-05-30",type:"pdf",ver:"v1"},{name:"Foto_Fachada_01.jpg",folder:"Fotos",size:"3.2 MB",date:"2024-03-15",type:"jpg",ver:"v1"},{name:"CBMMG_Protocolo.pdf",folder:"CBMMG",size:"1.1 MB",date:"2024-02-28",type:"pdf",ver:"v1"}];
-  const TC={pdf:"#EF4444",dwg:"#3B82F6",docx:"#8B5CF6",jpg:"#F59E0B"};
-  const ICONS={pdf:"📄",dwg:"📐",docx:"📝",jpg:"🖼️"};
-  const display=folder==="Todos"?DOCS:DOCS.filter(d=>d.folder===folder);
-  return(<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}><h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Gestão Documental</h2><Btn primary>↑ Upload</Btn></div>
-    <div style={{display:"grid",gridTemplateColumns:"200px 1fr",gap:20}}>
-      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14}}>
-        <p style={{fontSize:11,color:C.textMuted,margin:"0 0 10px",fontWeight:700,textTransform:"uppercase"}}>Pastas</p>
-        {FOLDERS.map(f=><button key={f} onClick={()=>setFolder(f)} style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"9px 12px",borderRadius:8,border:"none",cursor:"pointer",background:folder===f?C.accentDim:"transparent",color:folder===f?C.accentText:C.textMuted,fontSize:13,textAlign:"left",marginBottom:2,fontWeight:folder===f?700:400,borderLeft:folder===f?`3px solid ${C.accent}`:"3px solid transparent"}}><span>📁</span><span style={{flex:1}}>{f}</span>{f!=="Todos"&&<span style={{fontSize:11,color:C.textFaint}}>{DOCS.filter(d=>d.folder===f).length}</span>}</button>)}
-      </div>
-      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-        <h3 style={{margin:"0 0 16px",fontSize:14,fontWeight:800,color:C.text}}>{folder} ({display.length})</h3>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:12}}>
-          {display.map((d,i)=><div key={i} style={{background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,padding:14,cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.borderHover} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}><div style={{width:34,height:34,borderRadius:8,background:(TC[d.type]||"#888")+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{ICONS[d.type]||"📄"}</div><span style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:(TC[d.type]||"#888")+"33",color:TC[d.type]||"#888",fontWeight:700,textTransform:"uppercase"}}>{d.type}</span></div>
-            <p style={{margin:"0 0 4px",fontSize:12,fontWeight:700,color:C.text,wordBreak:"break-word"}}>{d.name}</p>
-            <p style={{margin:0,fontSize:11,color:C.textMuted}}>{d.size} · {fmtD(d.date)} · <span style={{color:C.info}}>{d.ver}</span></p>
-          </div>)}
-        </div>
-      </div>
-    </div>
+    {modal&&<Modal title={form.id?"Editar Obra":"Nova Obra"} onClose={()=>setModal(false)}>
+      <G2><Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld><Fld label="Projeto Vinculado"><Sel value={form.project_id||""} onChange={sf("project_id")} options={projects.map(p=>({value:p.id,label:p.code}))}/></Fld></G2>
+      <Fld label="Endereco da Obra"><Inp value={form.address||""} onChange={sf("address")}/></Fld>
+      <G2><Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld><Fld label="Visitas Realizadas"><Inp value={form.visits||""} onChange={sf("visits")} type="number"/></Fld></G2>
+      <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Iniciando","Em andamento","Paralisada","Concluida"]}/></Fld>
+      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>{loading?"Salvando...":"Salvar Obra"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+    </Modal>}
   </div>);
 };
 
-const Users = () => {
-  const USERS=[{name:"Paulo Lima",role:"Administrador",email:"paulo@plsilva.eng.br",init:"PL",color:C.accent},{name:"Sofia Castro",role:"Projetista",email:"sofia@plsilva.eng.br",init:"SC",color:C.info},{name:"Marcos Vidal",role:"Engenheiro",email:"marcos@plsilva.eng.br",init:"MV",color:C.success},{name:"Ana Torres",role:"Engenheiro",email:"ana@plsilva.eng.br",init:"AT",color:"#8B5CF6"},{name:"Carlos F.",role:"Financeiro",email:"financeiro@plsilva.eng.br",init:"CF",color:C.warning}];
-  const RC={Administrador:{color:C.accent,bg:C.accentDim},Engenheiro:{color:C.success,bg:C.successBg},Projetista:{color:C.info,bg:C.infoBg},Financeiro:{color:C.warning,bg:C.warningBg}};
-  return(<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}><h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Usuários & Permissões</h2><Btn primary>+ Convidar</Btn></div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:14,marginBottom:24}}>
-      {USERS.map((u,i)=>{const rc=RC[u.role]||{color:C.textMuted,bg:C.graphite};return(<div key={i} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:18}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}><div style={{width:44,height:44,borderRadius:"50%",background:u.color+"33",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:900,color:u.color}}>{u.init}</div><div><p style={{margin:0,fontSize:14,fontWeight:800,color:C.text}}>{u.name}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{u.email}</p></div></div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:11,padding:"4px 10px",borderRadius:6,background:rc.bg,color:rc.color,fontWeight:700}}>{u.role}</span><span style={{fontSize:11,color:C.success}}>● Ativo</span></div></div>);})}
-    </div>
-    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-      <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Matriz de Permissões</h3>
-      <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
-        <thead><tr style={{background:C.graphite}}><th style={{padding:"10px 14px",textAlign:"left",color:C.textMuted,borderBottom:`1px solid ${C.border}`}}>Módulo</th>{["Admin","Engenheiro","Projetista","Financeiro","Cliente"].map(r=><th key={r} style={{padding:"10px 12px",textAlign:"center",color:C.textMuted,borderBottom:`1px solid ${C.border}`,fontSize:11}}>{r}</th>)}</tr></thead>
-        <tbody>{[["Dashboard","✅","✅","✅","✅","❌"],["Clientes","✅","👁️","👁️","✅","❌"],["Projetos","✅","✅","✅","👁️","👁️"],["Documentos","✅","✅","✅","👁️","👁️"],["Laudos","✅","✅","❌","❌","❌"],["PSCIP","✅","✅","👁️","❌","❌"],["Obras","✅","✅","❌","❌","❌"],["Financeiro","✅","❌","❌","✅","❌"],["Usuários","✅","❌","❌","❌","❌"]].map(([m,...ps])=>(<tr key={m} style={{borderBottom:`1px solid ${C.border}`}} onMouseEnter={e=>e.currentTarget.style.background=C.surfaceHover} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><td style={{padding:"11px 14px",color:C.text,fontWeight:700,fontSize:13}}>{m}</td>{ps.map((p,i)=><td key={i} style={{padding:"11px 12px",textAlign:"center",fontSize:14}}>{p}</td>)}</tr>))}</tbody>
-      </table></div>
-    </div>
-  </div>);
-};
-
-const Portal = ({data}) => {
-  const cl=data.clients[0];
-  const projs=data.projects.filter(p=>p.clientId===cl.id);
-  const recs=data.financials.receivables.filter(r=>r.clientId===cl.id);
-  return(<div>
-    <div style={{background:`linear-gradient(135deg,${C.accentDim} 0%,${C.graphite} 100%)`,borderRadius:16,padding:"28px",marginBottom:26,border:`1px solid ${C.accent}33`}}>
-      <p style={{margin:"0 0 4px",fontSize:11,color:C.accentText,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em"}}>Área do Cliente</p>
-      <h2 style={{margin:"0 0 4px",fontSize:22,fontWeight:900,color:C.white}}>{cl.name}</h2>
-      <p style={{margin:0,fontSize:13,color:C.accentText}}>Portal PLSilva Engenharia</p>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:22}}>
-      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}><h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Meus Projetos</h3>{projs.map(p=><div key={p.id} style={{padding:"10px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><p style={{margin:0,fontSize:13,fontWeight:700,color:C.text}}>{p.type}</p><p style={{margin:0,fontSize:11,color:C.textMuted,fontFamily:"monospace"}}>{p.code}</p></div><Badge text={p.status}/></div>)}</div>
-      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}><h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Meus Pagamentos</h3>{recs.map(r=><div key={r.id} style={{padding:"10px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><p style={{margin:0,fontSize:13,fontWeight:700,color:C.text}}>{fmt(r.value)}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{fmtD(r.dueDate)}</p></div><span style={{fontSize:11,fontWeight:700,color:r.status==="Recebido"?C.success:C.warning}}>{r.status}</span></div>)}</div>
-    </div>
-    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-      <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Arquivos Liberados</h3>
-      {[{name:"Contrato_Assinado.pdf",date:"2024-01-15",type:"Contrato"},{name:"Planta_Aprovada_Prefeitura.pdf",date:"2024-05-30",type:"Aprovação"},{name:"Relatório_Maio_2024.pdf",date:"2024-05-31",type:"Relatório"}].map((f,i)=>(
-        <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 0",borderBottom:`1px solid ${C.border}`}}>
-          <div style={{display:"flex",alignItems:"center",gap:12}}><span style={{fontSize:22}}>📄</span><div><p style={{margin:0,fontSize:13,fontWeight:700,color:C.text}}>{f.name}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{f.type} · {fmtD(f.date)}</p></div></div>
-          <Btn small>↓ Baixar</Btn>
-        </div>
-      ))}
-    </div>
-  </div>);
-};
-
-const NAV=[{k:"dashboard",l:"Dashboard",ic:"📊"},{k:"clients",l:"Clientes",ic:"👥"},{k:"projects",l:"Projetos",ic:"📐"},{k:"documents",l:"Documentos",ic:"📁"},{k:"laudos",l:"Laudos",ic:"📋"},{k:"pscip",l:"PSCIP / CBMMG",ic:"🔥"},{k:"obras",l:"Obras",ic:"🏗️"},{k:"financial",l:"Financeiro",ic:"💰"},{k:"users",l:"Usuários",ic:"🔐"},{k:"portal",l:"Área do Cliente",ic:"👤"}];
+const NAV=[{k:"dashboard",l:"Dashboard",ic:"📊"},{k:"clients",l:"Clientes",ic:"👥"},{k:"projects",l:"Projetos",ic:"📐"},{k:"laudos",l:"Laudos",ic:"📋"},{k:"obras",l:"Obras",ic:"🏗️"},{k:"financial",l:"Financeiro",ic:"💰"}];
 
 function App(){
   const [page,setPage]=useState("dashboard");
-  const [data,setData]=useState(INIT);
   const [open,setOpen]=useState(true);
+  const [loading,setLoading]=useState(true);
+  const [clients,setClients]=useState([]);
+  const [projects,setProjects]=useState([]);
+  const [laudos,setLaudos]=useState([]);
+  const [obras,setObras]=useState([]);
+  const [receivables,setReceivables]=useState([]);
+  const [payables,setPayables]=useState([]);
+
+  const loadAll=async()=>{
+    setLoading(true);
+    const [c,p,l,o,r,py]=await Promise.all([
+      sb.from("clients").select("*").order("created_at",{ascending:false}),
+      sb.from("projects").select("*").order("created_at",{ascending:false}),
+      sb.from("laudos").select("*").order("created_at",{ascending:false}),
+      sb.from("obras").select("*").order("created_at",{ascending:false}),
+      sb.from("financials_receivables").select("*").order("created_at",{ascending:false}),
+      sb.from("financials_payables").select("*").order("created_at",{ascending:false}),
+    ]);
+    setClients(c.data||[]);
+    setProjects(p.data||[]);
+    setLaudos(l.data||[]);
+    setObras(o.data||[]);
+    setReceivables(r.data||[]);
+    setPayables(py.data||[]);
+    setLoading(false);
+  };
+
+  useEffect(()=>{loadAll();},[]);
+
   const W=open?220:60;
   return(
     <div style={{display:"flex",minHeight:"100vh",background:C.bg,color:C.text,fontFamily:"'Inter',system-ui,sans-serif"}}>
@@ -550,30 +540,35 @@ function App(){
           {open?(<div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:34,height:34,borderRadius:8,background:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:900,color:"#000",flexShrink:0}}>PL</div><div><p style={{margin:0,fontSize:14,fontWeight:900,color:C.text}}>PLSilva</p><p style={{margin:0,fontSize:9,color:C.textMuted,textTransform:"uppercase",letterSpacing:"0.1em"}}>Engenharia</p></div></div>):(<div style={{width:34,height:34,borderRadius:8,background:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:900,color:"#000"}}>PL</div>)}
         </div>
         <nav style={{flex:1,padding:"10px 6px",overflowY:"auto"}}>
-          {NAV.map(item=>{const active=page===item.k;return(<button key={item.k} onClick={()=>setPage(item.k)} title={!open?item.l:""} style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:open?"9px 12px":"9px 0",borderRadius:8,border:"none",cursor:"pointer",textAlign:"left",background:active?C.accentDim:"transparent",color:active?C.accentText:C.textMuted,fontSize:12,fontWeight:active?700:500,marginBottom:2,justifyContent:open?"flex-start":"center",borderLeft:active?`3px solid ${C.accent}`:"3px solid transparent"}} onMouseEnter={e=>{if(!active){e.currentTarget.style.background=C.surfaceHover;e.currentTarget.style.color=C.text;}}} onMouseLeave={e=>{if(!active){e.currentTarget.style.background="transparent";e.currentTarget.style.color=C.textMuted;}}}><span style={{fontSize:16,flexShrink:0}}>{item.ic}</span>{open&&<span style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{item.l}</span>}</button>);})}
+          {NAV.map(item=>{const active=page===item.k;return(
+            <button key={item.k} onClick={()=>setPage(item.k)} title={!open?item.l:""}
+              style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:open?"9px 12px":"9px 0",borderRadius:8,border:"none",cursor:"pointer",textAlign:"left",background:active?C.accentDim:"transparent",color:active?C.accentText:C.textMuted,fontSize:12,fontWeight:active?700:500,marginBottom:2,justifyContent:open?"flex-start":"center",borderLeft:active?`3px solid ${C.accent}`:"3px solid transparent"}}
+              onMouseEnter={e=>{if(!active){e.currentTarget.style.background=C.surfaceHover;e.currentTarget.style.color=C.text;}}}
+              onMouseLeave={e=>{if(!active){e.currentTarget.style.background="transparent";e.currentTarget.style.color=C.textMuted;}}}
+            ><span style={{fontSize:16,flexShrink:0}}>{item.ic}</span>{open&&<span style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{item.l}</span>}</button>
+          );})}
         </nav>
         <div style={{padding:"10px 6px",borderTop:`1px solid ${C.border}`}}>
-          <button onClick={()=>setOpen(o=>!o)} style={{display:"flex",alignItems:"center",justifyContent:open?"flex-start":"center",gap:10,width:"100%",padding:"9px 12px",borderRadius:8,border:"none",cursor:"pointer",background:"transparent",color:C.textMuted,fontSize:12}} onMouseEnter={e=>e.currentTarget.style.background=C.surfaceHover} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-            <span style={{fontSize:14}}>{open?"◀":"▶"}</span>{open&&<span>Recolher</span>}
+          <button onClick={()=>setOpen(o=>!o)} style={{display:"flex",alignItems:"center",justifyContent:open?"flex-start":"center",gap:10,width:"100%",padding:"9px 12px",borderRadius:8,border:"none",cursor:"pointer",background:"transparent",color:C.textMuted,fontSize:12}}
+            onMouseEnter={e=>e.currentTarget.style.background=C.surfaceHover}
+            onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+            <span>{open?"◀":"▶"}</span>{open&&<span>Recolher</span>}
           </button>
         </div>
       </aside>
       <main style={{flex:1,padding:"28px 32px",overflowY:"auto",minWidth:0}}>
-        {page==="dashboard"&&<Dashboard data={data}/>}
-        {page==="clients"&&<Clients data={data} setData={setData}/>}
-        {page==="projects"&&<Projects data={data} setData={setData}/>}
-        {page==="documents"&&<Documents data={data}/>}
-        {page==="laudos"&&<Laudos data={data} setData={setData}/>}
-        {page==="pscip"&&<PSCIP data={data} setData={setData}/>}
-        {page==="obras"&&<Obras data={data}/>}
-        {page==="financial"&&<Financial data={data}/>}
-        {page==="users"&&<Users/>}
-        {page==="portal"&&<Portal data={data}/>}
+        {loading?<Loading/>:<>
+          {page==="dashboard"&&<Dashboard clients={clients} projects={projects} laudos={laudos} receivables={receivables} payables={payables}/>}
+          {page==="clients"&&<Clients clients={clients} projects={projects} laudos={laudos} receivables={receivables} reload={loadAll}/>}
+          {page==="projects"&&<Projects projects={projects} clients={clients} receivables={receivables} reload={loadAll}/>}
+          {page==="laudos"&&<Laudos laudos={laudos} clients={clients} reload={loadAll}/>}
+          {page==="obras"&&<Obras obras={obras} clients={clients} projects={projects} reload={loadAll}/>}
+          {page==="financial"&&<Financial receivables={receivables} payables={payables} clients={clients} projects={projects} reload={loadAll}/>}
+        </>}
       </main>
     </div>
   );
 }
-
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
