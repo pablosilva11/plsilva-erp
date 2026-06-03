@@ -2,20 +2,22 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PLSilva Engenharia — ERP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PLSilva">
+<title>PLSilva Engenharia</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #0a0a0a; color: #f0f0f0; font-family: 'Inter', system-ui, sans-serif; }
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: #111; }
-::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-input, select, textarea, button { font-family: inherit; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: #0a0a0a; color: #f0f0f0; font-family: -apple-system, 'Inter', system-ui, sans-serif; overscroll-behavior: none; }
+::-webkit-scrollbar { width: 0; height: 0; }
+input, select, textarea, button { font-family: inherit; font-size: 16px; }
 input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
 </style>
 </head>
 <body>
@@ -25,6 +27,9 @@ const { useState, useEffect } = React;
 const SURL = "https://sreatrvvgxooddhkbago.supabase.co";
 const SKEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyZWF0cnZ2Z3hvb2RkaGtiYWdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MzUxNjUsImV4cCI6MjA5NjAxMTE2NX0.SOS84j22J7lsIzTaUu-SheVV__d87_YUhhP24puKZvU";
 const sb = supabase.createClient(SURL, SKEY);
+
+const isMobile = window.innerWidth < 768;
+
 const C = {
   bg:"#0a0a0a",surface:"#111111",surfaceHover:"#181818",border:"#222222",
   text:"#f0f0f0",textMuted:"#888888",textFaint:"#3a3a3a",
@@ -49,71 +54,62 @@ const Badge = ({text}) => {
   const cfg=SC[text]||{color:"#888",bg:"#1a1a1a"};
   return <span style={{display:"inline-flex",alignItems:"center",padding:"3px 10px",borderRadius:6,fontSize:11,fontWeight:700,color:cfg.color,background:cfg.bg,border:`1px solid ${cfg.color}33`,whiteSpace:"nowrap"}}>{text}</span>;
 };
+
 const StatCard = ({label,value,sub,icon,color=C.accent,hl}) => (
-  <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:"18px 20px",display:"flex",flexDirection:"column",gap:6,borderTop:hl?`2px solid ${color}`:`1px solid ${C.border}`}}>
+  <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:"16px",display:"flex",flexDirection:"column",gap:4,borderTop:hl?`2px solid ${color}`:`1px solid ${C.border}`}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-      <span style={{fontSize:11,color:C.textMuted,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.06em"}}>{label}</span>
-      <span style={{fontSize:18}}>{icon}</span>
+      <span style={{fontSize:10,color:C.textMuted,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.06em"}}>{label}</span>
+      <span style={{fontSize:16}}>{icon}</span>
     </div>
-    <div style={{fontSize:22,fontWeight:800,color:C.text}}>{value}</div>
-    {sub&&<div style={{fontSize:11,color:C.textMuted}}>{sub}</div>}
+    <div style={{fontSize:20,fontWeight:800,color:C.text}}>{value}</div>
+    {sub&&<div style={{fontSize:10,color:C.textMuted}}>{sub}</div>}
   </div>
 );
-const Btn = ({children,onClick,style={},primary,small,danger}) => (
-  <button onClick={onClick} style={{background:primary?C.accent:danger?C.danger:C.border,color:primary?"#000":C.text,border:"none",borderRadius:8,padding:small?"7px 14px":"10px 18px",fontSize:small?12:13,fontWeight:700,cursor:"pointer",...style}}>{children}</button>
+
+const Btn = ({children,onClick,style={},primary,small,danger,full}) => (
+  <button onClick={onClick} style={{background:primary?C.accent:danger?C.danger:C.border,color:primary?"#000":C.text,border:"none",borderRadius:10,padding:small?"10px 16px":"14px 20px",fontSize:small?13:15,fontWeight:700,cursor:"pointer",width:full?"100%":"auto",minHeight:44,...style}}>{children}</button>
 );
+
 const Inp = ({value,onChange,placeholder,type="text"}) => (
   <input type={type} value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder}
-    style={{width:"100%",padding:"10px 14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,color:C.text,fontSize:13,outline:"none",boxSizing:"border-box"}}
+    style={{width:"100%",padding:"14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,color:C.text,fontSize:16,outline:"none",boxSizing:"border-box",minHeight:48}}
     onFocus={e=>e.target.style.borderColor=C.accent} onBlur={e=>e.target.style.borderColor=C.border}/>
 );
+
 const Sel = ({value,onChange,options}) => (
   <select value={value||""} onChange={e=>onChange(e.target.value)}
-    style={{width:"100%",padding:"10px 14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,color:C.text,fontSize:13,outline:"none",cursor:"pointer"}}>
+    style={{width:"100%",padding:"14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,color:C.text,fontSize:16,outline:"none",cursor:"pointer",minHeight:48}}>
     <option value="">Selecione...</option>
     {options.map(o=><option key={o.value||o} value={o.value!==undefined?o.value:o}>{o.label||o}</option>)}
   </select>
 );
+
 const Fld = ({label,children}) => (
-  <div style={{marginBottom:14}}>
-    <label style={{display:"block",fontSize:11,fontWeight:700,color:C.textMuted,marginBottom:5,textTransform:"uppercase",letterSpacing:"0.05em"}}>{label}</label>
+  <div style={{marginBottom:16}}>
+    <label style={{display:"block",fontSize:12,fontWeight:700,color:C.textMuted,marginBottom:6,textTransform:"uppercase",letterSpacing:"0.05em"}}>{label}</label>
     {children}
   </div>
 );
-const G2 = ({children}) => <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>{children}</div>;
+
 const Modal = ({title,onClose,children}) => (
-  <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={e=>e.target===e.currentTarget&&onClose()}>
-    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:14,width:"min(640px,96vw)",maxHeight:"88vh",overflowY:"auto",padding:28}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-        <h3 style={{margin:0,fontSize:17,fontWeight:800,color:C.text}}>{title}</h3>
-        <button onClick={onClose} style={{background:C.border,border:"none",borderRadius:6,color:C.text,width:32,height:32,fontSize:18,cursor:"pointer"}}>x</button>
+  <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:1000,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div style={{background:C.surface,borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"90vh",overflowY:"auto",padding:"24px 20px",paddingBottom:"calc(24px + env(safe-area-inset-bottom, 20px))"}}>
+      <div style={{width:40,height:4,background:C.border,borderRadius:2,margin:"0 auto 20px"}}/>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <h3 style={{margin:0,fontSize:18,fontWeight:800,color:C.text}}>{title}</h3>
+        <button onClick={onClose} style={{background:C.border,border:"none",borderRadius:8,color:C.text,width:36,height:36,fontSize:20,cursor:"pointer"}}>×</button>
       </div>
       {children}
     </div>
   </div>
 );
-const Tbl = ({cols,rows}) => (
-  <div style={{overflowX:"auto",borderRadius:10,border:`1px solid ${C.border}`}}>
-    <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-      <thead><tr style={{background:C.graphite}}>
-        {cols.map((c,i)=><th key={i} style={{padding:"11px 14px",textAlign:"left",color:C.textMuted,fontSize:11,fontWeight:700,textTransform:"uppercase",borderBottom:`1px solid ${C.border}`,whiteSpace:"nowrap"}}>{c}</th>)}
-      </tr></thead>
-      <tbody>
-        {rows.map((row,i)=>(
-          <tr key={i} style={{borderBottom:`1px solid ${C.border}`}} onMouseEnter={e=>e.currentTarget.style.background=C.surfaceHover} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-            {row.map((cell,j)=><td key={j} style={{padding:"12px 14px",color:C.text,verticalAlign:"middle"}}>{cell}</td>)}
-          </tr>
-        ))}
-        {rows.length===0&&<tr><td colSpan={cols.length} style={{padding:32,textAlign:"center",color:C.textMuted}}>Nenhum registro encontrado</td></tr>}
-      </tbody>
-    </table>
-  </div>
-);
+
+const Loading = () => <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:60,color:C.textMuted,fontSize:14}}>Carregando...</div>;
+
 const PBar = ({value,max}) => {
   const pct=max>0?Math.min(100,Math.round((value/max)*100)):0;
-  return <div style={{background:C.border,borderRadius:4,height:5}}><div style={{width:`${pct}%`,height:"100%",background:C.accent,borderRadius:4}}/></div>;
+  return <div style={{background:C.border,borderRadius:4,height:6}}><div style={{width:`${pct}%`,height:"100%",background:C.accent,borderRadius:4}}/></div>;
 };
-const Loading = () => <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:60,color:C.textMuted,fontSize:14}}>Carregando dados...</div>;
 
 const Dashboard = ({clients,projects,laudos,receivables,payables}) => {
   const pendRec=receivables.filter(r=>r.status==="Pendente").reduce((s,r)=>s+r.value,0);
@@ -121,46 +117,34 @@ const Dashboard = ({clients,projects,laudos,receivables,payables}) => {
   const monRec=receivables.filter(r=>r.status==="Recebido").reduce((s,r)=>s+r.value,0);
   const monExp=payables.filter(r=>r.status==="Pago").reduce((s,r)=>s+r.value,0);
   const active=projects.filter(p=>!["Concluido","Orcamento"].includes(p.status));
-  return(<div>
-    <div style={{marginBottom:28}}><h1 style={{fontSize:26,fontWeight:900,color:C.text,margin:"0 0 4px"}}>Dashboard Executivo</h1><p style={{color:C.textMuted,margin:0,fontSize:13}}>{TODAY.toLocaleDateString("pt-BR",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</p></div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:14,marginBottom:28}}>
-      <StatCard label="Projetos Ativos" value={active.length} sub="Em execucao" icon="📐" hl/>
+  return(<div style={{padding:"0 0 20px"}}>
+    <h1 style={{fontSize:22,fontWeight:900,color:C.text,margin:"0 0 4px"}}>Dashboard</h1>
+    <p style={{color:C.textMuted,margin:"0 0 20px",fontSize:13}}>{TODAY.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"})}</p>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
+      <StatCard label="Projetos" value={active.length} sub="Ativos" icon="📐" hl/>
       <StatCard label="Clientes" value={clients.length} sub="Cadastrados" icon="👥" color={C.info} hl/>
-      <StatCard label="Laudos" value={laudos.filter(l=>l.status!=="Concluido").length} sub="Pendentes" icon="📋" color={C.info}/>
-      <StatCard label="Aprovados" value={projects.filter(p=>p.status==="Aprovado").length} sub="Este ano" icon="✅" color={C.success}/>
       <StatCard label="Receita" value={fmt(monRec)} sub="Recebida" icon="💰" color={C.success} hl/>
-      <StatCard label="Despesas" value={fmt(monExp)} sub="Pagas" icon="📤" color={C.danger}/>
       <StatCard label="A Receber" value={fmt(pendRec)} sub="Pendente" icon="📥" color={C.accentText} hl/>
-      <StatCard label="A Pagar" value={fmt(pendPay)} sub="Pendente" icon="⚠️" color={C.warning}/>
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
-      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Alertas de Vencimento</h3>
-        {receivables.filter(r=>r.status==="Pendente").slice(0,3).map((r,i)=>(
-          <div key={i} style={{padding:"9px 12px",borderRadius:8,background:C.bg,border:`1px solid ${C.success}33`,borderLeft:`3px solid ${C.success}`,marginBottom:8}}>
-            <p style={{margin:"0 0 2px",fontSize:12,color:C.text,fontWeight:600}}>A receber: {fmt(r.value)}</p>
-            <p style={{margin:0,fontSize:11,color:C.textMuted}}>Vence {fmtD(r.due_date)}</p>
-          </div>
-        ))}
-        {payables.filter(p=>p.status==="Pendente").slice(0,2).map((p,i)=>(
-          <div key={i} style={{padding:"9px 12px",borderRadius:8,background:C.bg,border:`1px solid ${C.warning}33`,borderLeft:`3px solid ${C.warning}`,marginBottom:8}}>
-            <p style={{margin:"0 0 2px",fontSize:12,color:C.text,fontWeight:600}}>{p.description}: {fmt(p.value)}</p>
-            <p style={{margin:0,fontSize:11,color:C.textMuted}}>Vence {fmtD(p.due_date)}</p>
-          </div>
-        ))}
-        {receivables.filter(r=>r.status==="Pendente").length===0&&payables.filter(p=>p.status==="Pendente").length===0&&<p style={{color:C.textMuted,fontSize:13}}>Nenhum vencimento pendente</p>}
-      </div>
-      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Projetos Recentes</h3>
-        {projects.slice(0,5).map(p=>(
-          <div key={p.id} style={{padding:"9px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div><p style={{margin:0,fontSize:13,fontWeight:700,color:C.text}}>{p.code}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{p.type}</p></div>
-            <Badge text={p.status}/>
-          </div>
-        ))}
-        {projects.length===0&&<p style={{color:C.textMuted,fontSize:13}}>Nenhum projeto</p>}
-      </div>
+    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:16}}>
+      <h3 style={{margin:"0 0 12px",fontSize:14,fontWeight:800,color:C.text}}>Projetos Recentes</h3>
+      {projects.slice(0,4).map(p=>(
+        <div key={p.id} style={{padding:"12px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div><p style={{margin:0,fontSize:14,fontWeight:700,color:C.text}}>{p.code}</p><p style={{margin:0,fontSize:12,color:C.textMuted}}>{p.type}</p></div>
+          <Badge text={p.status}/>
+        </div>
+      ))}
+      {projects.length===0&&<p style={{color:C.textMuted,fontSize:13}}>Nenhum projeto cadastrado</p>}
     </div>
+    {(pendRec>0||pendPay>0)&&<div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+      <h3 style={{margin:"0 0 12px",fontSize:14,fontWeight:800,color:C.text}}>⚡ Alertas</h3>
+      {receivables.filter(r=>r.status==="Pendente").slice(0,2).map((r,i)=>(
+        <div key={i} style={{padding:"10px 12px",borderRadius:8,background:C.bg,border:`1px solid ${C.success}33`,borderLeft:`3px solid ${C.success}`,marginBottom:8}}>
+          <p style={{margin:0,fontSize:13,color:C.text,fontWeight:600}}>A receber: {fmt(r.value)}</p>
+          <p style={{margin:0,fontSize:11,color:C.textMuted}}>Vence {fmtD(r.due_date)}</p>
+        </div>
+      ))}
+    </div>}
   </div>);
 };
 
@@ -176,76 +160,86 @@ const Clients = ({clients,projects,laudos,receivables,reload}) => {
     if(!form.name)return alert("Nome obrigatorio!");
     setLoading(true);
     const d={name:form.name,type:form.type||"PF",doc:form.doc,phone:form.phone,email:form.email,city:form.city,state:form.state||"MG",address:form.address,obs:form.obs};
-    if(form.id){await sb.from("clients").update(d).eq("id",form.id);}
-    else{await sb.from("clients").insert(d);}
-    await reload(); setLoading(false); setModal(false); setSel(null);
+    if(form.id){await sb.from("clients").update(d).eq("id",form.id);}else{await sb.from("clients").insert(d);}
+    await reload();setLoading(false);setModal(false);setSel(null);
   };
   const del=async(id)=>{if(!confirm("Excluir?"))return;await sb.from("clients").delete().eq("id",id);await reload();setSel(null);};
+
   if(sel){
     const sp=projects.filter(p=>p.client_id===sel.id);
     const totalR=receivables.filter(r=>r.client_id===sel.id&&r.status==="Recebido").reduce((s,r)=>s+r.value,0);
     return(<div>
-      <button onClick={()=>setSel(null)} style={{background:"none",border:`1px solid ${C.border}`,color:C.textMuted,padding:"7px 14px",borderRadius:8,cursor:"pointer",marginBottom:22,fontSize:13}}>← Voltar</button>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:22}}>
-        <div><h1 style={{fontSize:24,fontWeight:900,color:C.text,margin:"0 0 4px"}}>{sel.name}</h1><p style={{color:C.textMuted,margin:0,fontSize:13}}>{sel.doc}</p></div>
-        <div style={{display:"flex",gap:10}}><Btn primary onClick={()=>{setForm({...sel});setModal(true);}}>Editar</Btn><Btn danger onClick={()=>del(sel.id)}>Excluir</Btn></div>
+      <button onClick={()=>setSel(null)} style={{background:"none",border:"none",color:C.accent,fontSize:16,cursor:"pointer",marginBottom:16,padding:0}}>← Voltar</button>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
+        <div><h1 style={{fontSize:20,fontWeight:900,color:C.text,margin:"0 0 4px"}}>{sel.name}</h1><p style={{color:C.textMuted,margin:0,fontSize:13}}>{sel.doc}</p></div>
+        <Btn small primary onClick={()=>{setForm({...sel});setModal(true);}}>Editar</Btn>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:22}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
         <StatCard label="Projetos" value={sp.length} icon="📐"/>
         <StatCard label="Laudos" value={laudos.filter(l=>l.client_id===sel.id).length} icon="📋" color={C.info}/>
-        <StatCard label="Recebido" value={fmt(totalR)} icon="💰" color={C.success}/>
+        <StatCard label="Recebido" value={fmt(totalR).replace("R$","")} icon="💰" color={C.success}/>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
-        <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-          <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.text}}>Contato</h3>
-          {[["Telefone",sel.phone],["Email",sel.email],["Endereco",sel.address],["Cidade",`${sel.city||""}/${sel.state||""}`]].map(([l,v])=>(
-            <div key={l} style={{display:"flex",justifyContent:"space-between",padding:"9px 0",borderBottom:`1px solid ${C.border}`}}>
-              <span style={{fontSize:12,color:C.textMuted}}>{l}</span><span style={{fontSize:12,color:C.text}}>{v||"-"}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-          <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:700,color:C.text}}>Projetos</h3>
-          {sp.length===0?<p style={{color:C.textMuted,fontSize:13}}>Nenhum projeto</p>:sp.map(p=>(
-            <div key={p.id} style={{padding:"9px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div><p style={{margin:0,fontSize:13,fontWeight:700,color:C.text}}>{p.code}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{p.type}</p></div><Badge text={p.status}/>
-            </div>
-          ))}
-        </div>
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:12}}>
+        <h3 style={{margin:"0 0 12px",fontSize:14,fontWeight:700,color:C.text}}>Contato</h3>
+        {[["📞",sel.phone],["📧",sel.email],["📍",sel.address],["🏙️",`${sel.city||""}/${sel.state||""}`]].map(([ic,v])=>(
+          v?<div key={ic} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:`1px solid ${C.border}`}}>
+            <span style={{fontSize:18}}>{ic}</span><span style={{fontSize:13,color:C.text}}>{v}</span>
+          </div>:null
+        ))}
+      </div>
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+        <h3 style={{margin:"0 0 12px",fontSize:14,fontWeight:700,color:C.text}}>Projetos</h3>
+        {sp.length===0?<p style={{color:C.textMuted,fontSize:13}}>Nenhum projeto</p>:sp.map(p=>(
+          <div key={p.id} style={{padding:"10px 0",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><p style={{margin:0,fontSize:14,fontWeight:700,color:C.text}}>{p.code}</p><p style={{margin:0,fontSize:12,color:C.textMuted}}>{p.type}</p></div>
+            <Badge text={p.status}/>
+          </div>
+        ))}
       </div>
       {modal&&<Modal title="Editar Cliente" onClose={()=>setModal(false)}>
-        <G2><Fld label="Nome"><Inp value={form.name||""} onChange={sf("name")}/></Fld><Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={[{value:"PF",label:"Pessoa Fisica"},{value:"PJ",label:"Pessoa Juridica"}]}/></Fld></G2>
-        <G2><Fld label="CPF/CNPJ"><Inp value={form.doc||""} onChange={sf("doc")}/></Fld><Fld label="Telefone"><Inp value={form.phone||""} onChange={sf("phone")}/></Fld></G2>
+        <Fld label="Nome"><Inp value={form.name||""} onChange={sf("name")}/></Fld>
+        <Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={[{value:"PF",label:"Pessoa Fisica"},{value:"PJ",label:"Pessoa Juridica"}]}/></Fld>
+        <Fld label="CPF/CNPJ"><Inp value={form.doc||""} onChange={sf("doc")}/></Fld>
+        <Fld label="Telefone"><Inp value={form.phone||""} onChange={sf("phone")}/></Fld>
         <Fld label="Email"><Inp value={form.email||""} onChange={sf("email")}/></Fld>
-        <Fld label="Endereco"><Inp value={form.address||""} onChange={sf("address")}/></Fld>
-        <G2><Fld label="Cidade"><Inp value={form.city||""} onChange={sf("city")}/></Fld><Fld label="UF"><Inp value={form.state||""} onChange={sf("state")}/></Fld></G2>
-        <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>{loading?"Salvando...":"Salvar"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+        <Fld label="Cidade"><Inp value={form.city||""} onChange={sf("city")}/></Fld>
+        <Btn full primary onClick={save} style={{marginTop:8}}>{loading?"Salvando...":"Salvar"}</Btn>
       </Modal>}
     </div>);
   }
+
   return(<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-      <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Clientes</h2>
-      <Btn primary onClick={()=>{setForm({type:"PF",state:"MG"});setModal(true);}}>+ Novo Cliente</Btn>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Clientes</h2>
+      <Btn small primary onClick={()=>{setForm({type:"PF",state:"MG"});setModal(true);}}>+ Novo</Btn>
     </div>
-    <div style={{marginBottom:18}}><Inp value={search} onChange={setSearch} placeholder="Buscar por nome, CPF/CNPJ..."/></div>
-    <Tbl cols={["Nome","Tipo","CPF/CNPJ","Telefone","Email","Cidade","Projetos",""]}
-      rows={list.map(c=>[
-        <span style={{fontWeight:700,color:C.text,cursor:"pointer",textDecoration:"underline"}} onClick={()=>setSel(c)}>{c.name}</span>,
-        <span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:c.type==="PJ"?C.infoBg:C.graphite,color:c.type==="PJ"?C.info:C.textMuted}}>{c.type}</span>,
-        c.doc,c.phone,c.email,`${c.city||""}/${c.state||""}`,
-        <span style={{color:C.accent,fontWeight:800}}>{projects.filter(p=>p.client_id===c.id).length}</span>,
-        <button onClick={()=>del(c.id)} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:16}}>🗑️</button>
-      ])}
-    />
+    <div style={{marginBottom:16}}><Inp value={search} onChange={setSearch} placeholder="Buscar cliente..."/></div>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {list.map(c=>(
+        <div key={c.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,cursor:"pointer"}} onClick={()=>setSel(c)}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <p style={{margin:0,fontSize:15,fontWeight:700,color:C.text}}>{c.name}</p>
+              <p style={{margin:"2px 0 0",fontSize:12,color:C.textMuted}}>{c.doc} · {c.city}/{c.state}</p>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:c.type==="PJ"?C.infoBg:"#1a1a1a",color:c.type==="PJ"?C.info:C.textMuted,fontWeight:700}}>{c.type}</span>
+              <span style={{color:C.textMuted,fontSize:18}}>›</span>
+            </div>
+          </div>
+        </div>
+      ))}
+      {list.length===0&&<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum cliente</div>}
+    </div>
     {modal&&<Modal title="Novo Cliente" onClose={()=>setModal(false)}>
-      <G2><Fld label="Nome"><Inp value={form.name||""} onChange={sf("name")} placeholder="Nome completo"/></Fld><Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={[{value:"PF",label:"Pessoa Fisica"},{value:"PJ",label:"Pessoa Juridica"}]}/></Fld></G2>
-      <G2><Fld label="CPF/CNPJ"><Inp value={form.doc||""} onChange={sf("doc")}/></Fld><Fld label="Telefone"><Inp value={form.phone||""} onChange={sf("phone")}/></Fld></G2>
+      <Fld label="Nome Completo"><Inp value={form.name||""} onChange={sf("name")} placeholder="Nome"/></Fld>
+      <Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={[{value:"PF",label:"Pessoa Fisica"},{value:"PJ",label:"Pessoa Juridica"}]}/></Fld>
+      <Fld label="CPF/CNPJ"><Inp value={form.doc||""} onChange={sf("doc")}/></Fld>
+      <Fld label="Telefone"><Inp value={form.phone||""} onChange={sf("phone")} placeholder="(34) 99999-9999"/></Fld>
       <Fld label="Email"><Inp value={form.email||""} onChange={sf("email")}/></Fld>
       <Fld label="Endereco"><Inp value={form.address||""} onChange={sf("address")}/></Fld>
-      <G2><Fld label="Cidade"><Inp value={form.city||""} onChange={sf("city")}/></Fld><Fld label="UF"><Inp value={form.state||""} onChange={sf("state")}/></Fld></G2>
-      <Fld label="Observacoes"><textarea value={form.obs||""} onChange={e=>sf("obs")(e.target.value)} rows={3} style={{width:"100%",padding:"10px 14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,color:C.text,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box"}}/></Fld>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>{loading?"Salvando...":"Salvar Cliente"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+      <Fld label="Cidade"><Inp value={form.city||""} onChange={sf("city")}/></Fld>
+      <Btn full primary onClick={save} style={{marginTop:8}}>{loading?"Salvando...":"Salvar Cliente"}</Btn>
     </Modal>}
   </div>);
 };
@@ -263,50 +257,51 @@ const Projects = ({projects,clients,receivables,reload}) => {
     if(!form.code||!form.client_id)return alert("Codigo e cliente obrigatorios!");
     setLoading(true);
     const d={code:form.code,client_id:+form.client_id,type:form.type,responsible:form.responsible,value:+form.value||0,start_date:form.start_date||null,deadline:form.deadline||null,status:form.status||"Orcamento",description:form.description};
-    if(form.id){await sb.from("projects").update(d).eq("id",form.id);}
-    else{await sb.from("projects").insert(d);}
-    await reload(); setLoading(false); setModal(false);
+    if(form.id){await sb.from("projects").update(d).eq("id",form.id);}else{await sb.from("projects").insert(d);}
+    await reload();setLoading(false);setModal(false);
   };
   const del=async(id)=>{if(!confirm("Excluir?"))return;await sb.from("projects").delete().eq("id",id);await reload();};
   return(<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-      <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Projetos</h2>
-      <Btn primary onClick={()=>{setForm({status:"Orcamento",type:"Arquitetonico"});setModal(true);}}>+ Novo Projeto</Btn>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Projetos</h2>
+      <Btn small primary onClick={()=>{setForm({status:"Orcamento",type:"Arquitetonico"});setModal(true);}}>+ Novo</Btn>
     </div>
-    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:20}}>
-      {["Todos",...STATUSES].map(s=><button key={s} onClick={()=>setFilter(s)} style={{padding:"5px 14px",borderRadius:20,fontSize:12,fontWeight:700,cursor:"pointer",border:`1px solid ${filter===s?C.accent:C.border}`,background:filter===s?C.accentDim:"transparent",color:filter===s?C.accentText:C.textMuted}}>{s}{s!=="Todos"&&` (${projects.filter(p=>p.status===s).length})`}</button>)}
+    <div style={{display:"flex",gap:8,overflowX:"auto",marginBottom:16,paddingBottom:4}}>
+      {["Todos",...STATUSES].map(s=><button key={s} onClick={()=>setFilter(s)} style={{padding:"8px 14px",borderRadius:20,fontSize:12,fontWeight:700,cursor:"pointer",border:`1px solid ${filter===s?C.accent:C.border}`,background:filter===s?C.accentDim:"transparent",color:filter===s?C.accentText:C.textMuted,whiteSpace:"nowrap",minHeight:36}}>{s}</button>)}
     </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
       {filtered.map(p=>{
         const cl=clients.find(c=>c.id===p.client_id);
         const recv=receivables.filter(r=>r.project_id===p.id&&r.status==="Recebido").reduce((s,r)=>s+r.value,0);
-        return(<div key={p.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:18}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.accent+"66"} onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
+        return(<div key={p.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
-            <div><span style={{fontFamily:"monospace",fontSize:11,color:C.accent}}>{p.code}</span><h3 style={{margin:"3px 0 0",fontSize:14,fontWeight:800,color:C.text}}>{p.type}</h3></div>
+            <div><span style={{fontFamily:"monospace",fontSize:11,color:C.accent}}>{p.code}</span><h3 style={{margin:"3px 0 0",fontSize:15,fontWeight:800,color:C.text}}>{p.type}</h3></div>
             <Badge text={p.status}/>
           </div>
-          <p style={{margin:"0 0 2px",fontSize:13,color:C.text,fontWeight:600}}>{cl?.name||"-"}</p>
-          <p style={{margin:"0 0 14px",fontSize:12,color:C.textMuted}}>{p.responsible}</p>
-          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:11,color:C.textMuted}}>Progresso</span><span style={{fontSize:11,color:C.text}}>{p.value>0?Math.round((recv/p.value)*100):0}%</span></div>
+          <p style={{margin:"0 0 2px",fontSize:14,color:C.text,fontWeight:600}}>{cl?.name||"-"}</p>
+          <p style={{margin:"0 0 12px",fontSize:12,color:C.textMuted}}>{p.responsible}</p>
           <PBar value={recv} max={p.value||1}/>
-          <div style={{marginTop:12,paddingTop:12,borderTop:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <span style={{fontSize:13,fontWeight:800,color:C.success}}>{fmt(p.value)}</span>
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>{setForm({...p,client_id:String(p.client_id),value:String(p.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:16}}>✏️</button>
-              <button onClick={()=>del(p.id)} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:16}}>🗑️</button>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:10,alignItems:"center"}}>
+            <span style={{fontSize:14,fontWeight:800,color:C.success}}>{fmt(p.value)}</span>
+            <div style={{display:"flex",gap:12}}>
+              <button onClick={()=>{setForm({...p,client_id:String(p.client_id),value:String(p.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:20,padding:4}}>✏️</button>
+              <button onClick={()=>del(p.id)} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:20,padding:4}}>🗑️</button>
             </div>
           </div>
         </div>);
       })}
-      {filtered.length===0&&<div style={{gridColumn:"1/-1",padding:40,textAlign:"center",color:C.textMuted}}>Nenhum projeto</div>}
+      {filtered.length===0&&<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum projeto</div>}
     </div>
     {modal&&<Modal title={form.id?"Editar Projeto":"Novo Projeto"} onClose={()=>setModal(false)}>
-      <G2><Fld label="Codigo"><Inp value={form.code||""} onChange={sf("code")} placeholder="PRJ-2024-001"/></Fld><Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={STATUSES}/></Fld></G2>
-      <G2><Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld><Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={PSTYPES}/></Fld></G2>
-      <G2><Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld><Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld></G2>
-      <G2><Fld label="Inicio"><Inp value={form.start_date||""} onChange={sf("start_date")} type="date"/></Fld><Fld label="Prazo"><Inp value={form.deadline||""} onChange={sf("deadline")} type="date"/></Fld></G2>
-      <Fld label="Descricao"><textarea value={form.description||""} onChange={e=>sf("description")(e.target.value)} rows={3} style={{width:"100%",padding:"10px 14px",background:C.bg,border:`1px solid ${C.border}`,borderRadius:8,color:C.text,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box"}}/></Fld>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>{loading?"Salvando...":"Salvar"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+      <Fld label="Codigo"><Inp value={form.code||""} onChange={sf("code")} placeholder="PRJ-2024-001"/></Fld>
+      <Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
+      <Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={PSTYPES}/></Fld>
+      <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={STATUSES}/></Fld>
+      <Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld>
+      <Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld>
+      <Fld label="Prazo"><Inp value={form.deadline||""} onChange={sf("deadline")} type="date"/></Fld>
+      <Fld label="Descricao"><textarea value={form.description||""} onChange={e=>sf("description")(e.target.value)} rows={3} style={{width:"100%",padding:14,background:C.bg,border:`1px solid ${C.border}`,borderRadius:10,color:C.text,fontSize:16,outline:"none",resize:"none",boxSizing:"border-box"}}/></Fld>
+      <Btn full primary onClick={save} style={{marginTop:8}}>{loading?"Salvando...":"Salvar Projeto"}</Btn>
     </Modal>}
   </div>);
 };
@@ -318,51 +313,42 @@ const Documentos = ({projects}) => {
   const [modal,setModal]=useState(false);
   const [form,setForm]=useState({project_id:"",pasta:"Contrato"});
   const [file,setFile]=useState(null);
-  const [filterProject,setFilterProject]=useState("");
-  const [filterPasta,setFilterPasta]=useState("");
   const sf=k=>v=>setForm(p=>({...p,[k]:v}));
   const loadDocs=async()=>{setLoading(true);const{data}=await sb.from("documentos").select("*").order("created_at",{ascending:false});setDocs(data||[]);setLoading(false);};
   useEffect(()=>{loadDocs();},[]);
   const upload=async()=>{
-    if(!file||!form.project_id)return alert("Selecione um projeto e um arquivo!");
+    if(!file||!form.project_id)return alert("Selecione projeto e arquivo!");
     setUploading(true);
     const ext=file.name.split(".").pop().toLowerCase();
     const path=`${form.project_id}/${form.pasta}/${Date.now()}_${file.name}`;
-    const{error:upErr}=await sb.storage.from("documentos").upload(path,file);
-    if(upErr){alert("Erro: "+upErr.message);setUploading(false);return;}
-    const{data:urlData}=sb.storage.from("documentos").getPublicUrl(path);
-    await sb.from("documentos").insert({project_id:+form.project_id,pasta:form.pasta,nome:file.name,tipo:ext,tamanho:file.size,url:urlData.publicUrl,path});
+    const{error}=await sb.storage.from("documentos").upload(path,file);
+    if(error){alert("Erro: "+error.message);setUploading(false);return;}
+    const{data:u}=sb.storage.from("documentos").getPublicUrl(path);
+    await sb.from("documentos").insert({project_id:+form.project_id,pasta:form.pasta,nome:file.name,tipo:ext,tamanho:file.size,url:u.publicUrl,path});
     await loadDocs();setUploading(false);setModal(false);setFile(null);setForm({project_id:"",pasta:"Contrato"});
   };
   const del=async(doc)=>{if(!confirm("Excluir?"))return;await sb.storage.from("documentos").remove([doc.path]);await sb.from("documentos").delete().eq("id",doc.id);await loadDocs();};
-  const filtered=docs.filter(d=>{if(filterProject&&d.project_id!==+filterProject)return false;if(filterPasta&&d.pasta!==filterPasta)return false;return true;});
   const fmtSize=b=>{if(!b)return "-";if(b>1024*1024)return`${(b/1024/1024).toFixed(1)} MB`;return`${(b/1024).toFixed(0)} KB`;};
   return(<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-      <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Documentos</h2>
-      <Btn primary onClick={()=>setModal(true)}>+ Upload de Arquivo</Btn>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Documentos</h2>
+      <Btn small primary onClick={()=>setModal(true)}>+ Upload</Btn>
     </div>
-    <div style={{display:"flex",gap:12,marginBottom:20}}>
-      <div style={{flex:1}}><Sel value={filterProject} onChange={setFilterProject} options={projects.map(p=>({value:p.id,label:`${p.code} — ${p.type}`}))}/></div>
-      <div style={{flex:1}}><Sel value={filterPasta} onChange={setFilterPasta} options={PASTAS}/></div>
-      <Btn onClick={()=>{setFilterProject("");setFilterPasta("");}}>Limpar</Btn>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:14}}>
-      {loading?<div style={{gridColumn:"1/-1",padding:40,textAlign:"center",color:C.textMuted}}>Carregando...</div>:
-      filtered.length===0?<div style={{gridColumn:"1/-1",padding:40,textAlign:"center",color:C.textMuted}}>Nenhum documento encontrado</div>:
-      filtered.map(doc=>{
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {loading?<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Carregando...</div>:
+      docs.length===0?<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum documento</div>:
+      docs.map(doc=>{
         const ext=doc.tipo||"pdf";
         const proj=projects.find(p=>p.id===doc.project_id);
-        return(<div key={doc.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:16}}>
-          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-            <div style={{width:36,height:36,borderRadius:8,background:(TIPO_COR[ext]||"#888")+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{TIPO_ICON[ext]||"📄"}</div>
-            <span style={{fontSize:10,padding:"2px 6px",borderRadius:4,background:(TIPO_COR[ext]||"#888")+"33",color:TIPO_COR[ext]||"#888",fontWeight:700,textTransform:"uppercase"}}>{ext}</span>
+        return(<div key={doc.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14,display:"flex",alignItems:"center",gap:14}}>
+          <div style={{width:44,height:44,borderRadius:10,background:(TIPO_COR[ext]||"#888")+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,flexShrink:0}}>{TIPO_ICON[ext]||"📄"}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <p style={{margin:0,fontSize:13,fontWeight:700,color:C.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{doc.nome}</p>
+            <p style={{margin:0,fontSize:11,color:C.textMuted}}>{doc.pasta} · {fmtSize(doc.tamanho)}</p>
+            {proj&&<p style={{margin:0,fontSize:11,color:C.accent,fontFamily:"monospace"}}>{proj.code}</p>}
           </div>
-          <p style={{margin:"0 0 4px",fontSize:12,fontWeight:700,color:C.text,wordBreak:"break-word"}}>{doc.nome}</p>
-          <p style={{margin:"0 0 4px",fontSize:11,color:C.textMuted}}>{doc.pasta} · {fmtSize(doc.tamanho)}</p>
-          {proj&&<p style={{margin:"0 0 10px",fontSize:11,color:C.accent,fontFamily:"monospace"}}>{proj.code}</p>}
-          <div style={{display:"flex",gap:8}}>
-            <a href={doc.url} target="_blank" style={{flex:1,background:C.infoBg,color:C.info,border:"none",borderRadius:6,padding:"6px 0",fontSize:12,fontWeight:700,cursor:"pointer",textAlign:"center",textDecoration:"none",display:"block"}}>↓ Baixar</a>
+          <div style={{display:"flex",flexDirection:"column",gap:6,flexShrink:0}}>
+            <a href={doc.url} target="_blank" style={{background:C.infoBg,color:C.info,borderRadius:6,padding:"6px 10px",fontSize:12,fontWeight:700,textDecoration:"none",textAlign:"center"}}>↓</a>
             <button onClick={()=>del(doc)} style={{background:"#2a0a0a",color:C.danger,border:"none",borderRadius:6,padding:"6px 10px",fontSize:12,cursor:"pointer"}}>🗑️</button>
           </div>
         </div>);
@@ -370,19 +356,15 @@ const Documentos = ({projects}) => {
     </div>
     {modal&&<Modal title="Upload de Arquivo" onClose={()=>{setModal(false);setFile(null);}}>
       <Fld label="Projeto"><Sel value={form.project_id} onChange={sf("project_id")} options={projects.map(p=>({value:p.id,label:`${p.code} — ${p.type}`}))}/></Fld>
-      <Fld label="Pasta / Categoria"><Sel value={form.pasta} onChange={sf("pasta")} options={PASTAS}/></Fld>
+      <Fld label="Categoria"><Sel value={form.pasta} onChange={sf("pasta")} options={PASTAS}/></Fld>
       <Fld label="Arquivo">
-        <div style={{border:`2px dashed ${file?C.success:C.border}`,borderRadius:10,padding:30,textAlign:"center",cursor:"pointer",background:C.bg}}
-          onClick={()=>document.getElementById("fileInput").click()}
-          onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor=C.accent;}}
-          onDragLeave={e=>e.currentTarget.style.borderColor=file?C.success:C.border}
-          onDrop={e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)setFile(f);e.currentTarget.style.borderColor=C.success;}}>
-          <input id="fileInput" type="file" style={{display:"none"}} onChange={e=>{if(e.target.files[0])setFile(e.target.files[0]);}} accept=".pdf,.dwg,.docx,.xlsx,.jpg,.jpeg,.png,.zip"/>
-          {file?<><p style={{fontSize:24,margin:"0 0 8px"}}>✅</p><p style={{fontSize:13,fontWeight:700,color:C.success,margin:"0 0 4px"}}>{file.name}</p><p style={{fontSize:11,color:C.textMuted,margin:0}}>{(file.size/1024).toFixed(0)} KB</p></>
-          :<><p style={{fontSize:32,margin:"0 0 8px"}}>📁</p><p style={{color:C.textMuted,fontSize:13,margin:"0 0 4px"}}>Clique ou arraste o arquivo aqui</p><p style={{color:C.textFaint,fontSize:11,margin:0}}>PDF, DWG, DOCX, XLSX, JPG, PNG, ZIP</p></>}
+        <div style={{border:`2px dashed ${file?C.success:C.border}`,borderRadius:12,padding:30,textAlign:"center",cursor:"pointer"}} onClick={()=>document.getElementById("fi").click()}>
+          <input id="fi" type="file" style={{display:"none"}} onChange={e=>{if(e.target.files[0])setFile(e.target.files[0]);}} accept=".pdf,.dwg,.docx,.xlsx,.jpg,.jpeg,.png,.zip"/>
+          {file?<><p style={{fontSize:28,margin:"0 0 8px"}}>✅</p><p style={{fontSize:14,fontWeight:700,color:C.success,margin:0}}>{file.name}</p></>
+          :<><p style={{fontSize:36,margin:"0 0 8px"}}>📁</p><p style={{color:C.textMuted,fontSize:14,margin:0}}>Toque para selecionar</p></>}
         </div>
       </Fld>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={upload} style={{flex:1}}>{uploading?"Enviando...":"Fazer Upload"}</Btn><Btn onClick={()=>{setModal(false);setFile(null);}}>Cancelar</Btn></div>
+      <Btn full primary onClick={upload} style={{marginTop:8}}>{uploading?"Enviando...":"Fazer Upload"}</Btn>
     </Modal>}
   </div>);
 };
@@ -401,25 +383,37 @@ const Laudos = ({laudos,clients,reload}) => {
     await reload();setLoading(false);setModal(false);
   };
   return(<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-      <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Laudos Tecnicos</h2>
-      <Btn primary onClick={()=>{setForm({status:"Em desenvolvimento",type:"Inspecao Predial"});setModal(true);}}>+ Novo Laudo</Btn>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Laudos</h2>
+      <Btn small primary onClick={()=>{setForm({status:"Em desenvolvimento",type:"Inspecao Predial"});setModal(true);}}>+ Novo</Btn>
     </div>
-    <Tbl cols={["Tipo","Cliente","Endereco","Responsavel","Vistoria","Entrega","Valor","Status",""]}
-      rows={laudos.map(l=>{const cl=clients.find(c=>c.id===l.client_id);return[<span style={{fontWeight:700}}>{l.type}</span>,cl?.name||"-",l.address||"-",l.responsible||"-",fmtD(l.survey_date),fmtD(l.delivery_date),<span style={{color:C.success,fontWeight:700}}>{fmt(l.value)}</span>,<Badge text={l.status}/>,
-        <div style={{display:"flex",gap:6}}>
-          <button onClick={()=>{setForm({...l,client_id:String(l.client_id),value:String(l.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info}}>✏️</button>
-          <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("laudos").delete().eq("id",l.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger}}>🗑️</button>
-        </div>];})}
-    />
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {laudos.map(l=>{const cl=clients.find(c=>c.id===l.client_id);return(
+        <div key={l.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{fontSize:14,fontWeight:700,color:C.text}}>{l.type}</span><Badge text={l.status}/></div>
+          <p style={{margin:"0 0 2px",fontSize:13,color:C.textMuted}}>{cl?.name||"-"}</p>
+          <p style={{margin:"0 0 10px",fontSize:12,color:C.textMuted}}>{l.address}</p>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:14,fontWeight:700,color:C.success}}>{fmt(l.value)}</span>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>{setForm({...l,client_id:String(l.client_id),value:String(l.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:20}}>✏️</button>
+              <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("laudos").delete().eq("id",l.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:20}}>🗑️</button>
+            </div>
+          </div>
+        </div>
+      );})}
+      {laudos.length===0&&<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum laudo</div>}
+    </div>
     {modal&&<Modal title={form.id?"Editar Laudo":"Novo Laudo"} onClose={()=>setModal(false)}>
-      <G2><Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={TYPES}/></Fld><Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Em desenvolvimento","Revisao","Concluido"]}/></Fld></G2>
+      <Fld label="Tipo"><Sel value={form.type||""} onChange={sf("type")} options={TYPES}/></Fld>
+      <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Em desenvolvimento","Revisao","Concluido"]}/></Fld>
       <Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
       <Fld label="Endereco"><Inp value={form.address||""} onChange={sf("address")}/></Fld>
       <Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld>
-      <G2><Fld label="Data Vistoria"><Inp value={form.survey_date||""} onChange={sf("survey_date")} type="date"/></Fld><Fld label="Prazo Entrega"><Inp value={form.delivery_date||""} onChange={sf("delivery_date")} type="date"/></Fld></G2>
       <Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>{loading?"Salvando...":"Salvar"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+      <Fld label="Data Vistoria"><Inp value={form.survey_date||""} onChange={sf("survey_date")} type="date"/></Fld>
+      <Fld label="Prazo Entrega"><Inp value={form.delivery_date||""} onChange={sf("delivery_date")} type="date"/></Fld>
+      <Btn full primary onClick={save} style={{marginTop:8}}>{loading?"Salvando...":"Salvar"}</Btn>
     </Modal>}
   </div>);
 };
@@ -450,101 +444,79 @@ const Financial = ({receivables,payables,clients,projects,reload}) => {
     await reload();setLoading(false);setModal(false);
   };
   return(<div>
-    <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:"0 0 22px"}}>Gestao Financeira</h2>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:26}}>
-      <StatCard label="A Receber" value={fmt(pRec)} icon="📥" color={C.success} hl/>
+    <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:"0 0 16px"}}>Financeiro</h2>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
+      <StatCard label="A Receber" value={fmt(pRec).replace("R$","R$")} icon="📥" color={C.success} hl/>
       <StatCard label="A Pagar" value={fmt(pPay)} icon="📤" color={C.danger} hl/>
       <StatCard label="Recebido" value={fmt(tRec)} icon="💚" color={C.success}/>
       <StatCard label="Saldo" value={fmt(tRec-tPay)} icon={tRec>=tPay?"📈":"📉"} color={tRec>=tPay?C.success:C.danger} hl/>
     </div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
       <div style={{display:"flex",gap:4,background:C.graphite,borderRadius:10,padding:4}}>
-        {[["rec","Contas a Receber"],["pay","Contas a Pagar"]].map(([k,l])=>(
-          <button key={k} onClick={()=>setTab(k)} style={{padding:"8px 20px",borderRadius:8,border:"none",cursor:"pointer",background:tab===k?C.surface:"transparent",color:tab===k?C.text:C.textMuted,fontSize:13,fontWeight:700}}>{l}</button>
+        {[["rec","A Receber"],["pay","A Pagar"]].map(([k,l])=>(
+          <button key={k} onClick={()=>setTab(k)} style={{padding:"10px 16px",borderRadius:8,border:"none",cursor:"pointer",background:tab===k?C.surface:"transparent",color:tab===k?C.text:C.textMuted,fontSize:13,fontWeight:700,minHeight:40}}>{l}</button>
         ))}
       </div>
-      <Btn primary small onClick={()=>{setForm({status:"Pendente"});setModal(true);}}>+ {tab==="rec"?"Recebimento":"Pagamento"}</Btn>
+      <Btn small primary onClick={()=>{setForm({status:"Pendente"});setModal(true);}}>+</Btn>
     </div>
-    {tab==="rec"&&<Tbl cols={["Descricao","Cliente","Projeto","Valor","Vencimento","Status",""]}
-      rows={receivables.map(r=>{const cl=clients.find(c=>c.id===r.client_id);const pj=projects.find(p=>p.id===r.project_id);return[r.description,cl?.name?.split(" ").slice(0,2).join(" ")||"-",<span style={{fontFamily:"monospace",fontSize:11,color:C.accent}}>{pj?.code||"-"}</span>,<span style={{color:C.success,fontWeight:800}}>{fmt(r.value)}</span>,fmtD(r.due_date),<span style={{color:r.status==="Recebido"?C.success:C.warning,fontWeight:700,fontSize:12}}>{r.status}</span>,
-        <div style={{display:"flex",gap:6}}>
-          <button onClick={()=>{setForm({...r,client_id:String(r.client_id||""),project_id:String(r.project_id||""),value:String(r.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info}}>✏️</button>
-          <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("financials_receivables").delete().eq("id",r.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger}}>🗑️</button>
-        </div>];})}
-    />}
-    {tab==="pay"&&<Tbl cols={["Categoria","Descricao","Valor","Vencimento","Status",""]}
-      rows={payables.map(p=>[<span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:C.graphite,color:C.textMuted}}>{p.category}</span>,p.description,<span style={{color:C.danger,fontWeight:800}}>{fmt(p.value)}</span>,fmtD(p.due_date),<span style={{color:p.status==="Pago"?C.success:C.warning,fontWeight:700,fontSize:12}}>{p.status}</span>,
-        <div style={{display:"flex",gap:6}}>
-          <button onClick={()=>{setForm({...p,value:String(p.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info}}>✏️</button>
-          <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("financials_payables").delete().eq("id",p.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger}}>🗑️</button>
-        </div>])}
-    />}
-    {modal&&tab==="rec"&&<Modal title={form.id?"Editar Recebimento":"Novo Recebimento"} onClose={()=>setModal(false)}>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {tab==="rec"&&receivables.map(r=>{
+        const cl=clients.find(c=>c.id===r.client_id);
+        return(<div key={r.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <p style={{margin:0,fontSize:14,fontWeight:700,color:C.text,flex:1}}>{r.description}</p>
+            <span style={{color:r.status==="Recebido"?C.success:C.warning,fontWeight:700,fontSize:12,marginLeft:8}}>{r.status}</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><p style={{margin:0,fontSize:13,color:C.success,fontWeight:800}}>{fmt(r.value)}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>Vence {fmtD(r.due_date)}</p></div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>{setForm({...r,client_id:String(r.client_id||""),project_id:String(r.project_id||""),value:String(r.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:20}}>✏️</button>
+              <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("financials_receivables").delete().eq("id",r.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:20}}>🗑️</button>
+            </div>
+          </div>
+        </div>);
+      })}
+      {tab==="pay"&&payables.map(p=>(
+        <div key={p.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <p style={{margin:0,fontSize:14,fontWeight:700,color:C.text,flex:1}}>{p.description}</p>
+            <span style={{color:p.status==="Pago"?C.success:C.warning,fontWeight:700,fontSize:12,marginLeft:8}}>{p.status}</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><p style={{margin:0,fontSize:13,color:C.danger,fontWeight:800}}>{fmt(p.value)}</p><p style={{margin:0,fontSize:11,color:C.textMuted}}>{p.category} · {fmtD(p.due_date)}</p></div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>{setForm({...p,value:String(p.value)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:20}}>✏️</button>
+              <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("financials_payables").delete().eq("id",p.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:20}}>🗑️</button>
+            </div>
+          </div>
+        </div>
+      ))}
+      {((tab==="rec"&&receivables.length===0)||(tab==="pay"&&payables.length===0))&&<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum registro</div>}
+    </div>
+    {modal&&tab==="rec"&&<Modal title="Novo Recebimento" onClose={()=>setModal(false)}>
       <Fld label="Descricao"><Inp value={form.description||""} onChange={sf("description")} placeholder="Ex: Parcela 1/3"/></Fld>
-      <G2><Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld><Fld label="Projeto"><Sel value={form.project_id||""} onChange={sf("project_id")} options={projects.map(p=>({value:p.id,label:p.code}))}/></Fld></G2>
-      <G2><Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld><Fld label="Vencimento"><Inp value={form.due_date||""} onChange={sf("due_date")} type="date"/></Fld></G2>
+      <Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
+      <Fld label="Projeto"><Sel value={form.project_id||""} onChange={sf("project_id")} options={projects.map(p=>({value:p.id,label:p.code}))}/></Fld>
+      <Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld>
+      <Fld label="Vencimento"><Inp value={form.due_date||""} onChange={sf("due_date")} type="date"/></Fld>
       <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Pendente","Recebido","Cancelado"]}/></Fld>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={saveRec} style={{flex:1}}>{loading?"Salvando...":"Salvar"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+      <Btn full primary onClick={saveRec} style={{marginTop:8}}>{loading?"Salvando...":"Salvar"}</Btn>
     </Modal>}
-    {modal&&tab==="pay"&&<Modal title={form.id?"Editar Pagamento":"Novo Pagamento"} onClose={()=>setModal(false)}>
-      <G2><Fld label="Categoria"><Sel value={form.category||""} onChange={sf("category")} options={CATS}/></Fld><Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Pendente","Pago","Cancelado"]}/></Fld></G2>
+    {modal&&tab==="pay"&&<Modal title="Novo Pagamento" onClose={()=>setModal(false)}>
+      <Fld label="Categoria"><Sel value={form.category||""} onChange={sf("category")} options={CATS}/></Fld>
       <Fld label="Descricao"><Inp value={form.description||""} onChange={sf("description")}/></Fld>
-      <G2><Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld><Fld label="Vencimento"><Inp value={form.due_date||""} onChange={sf("due_date")} type="date"/></Fld></G2>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={savePay} style={{flex:1}}>{loading?"Salvando...":"Salvar"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
+      <Fld label="Valor (R$)"><Inp value={form.value||""} onChange={sf("value")} type="number"/></Fld>
+      <Fld label="Vencimento"><Inp value={form.due_date||""} onChange={sf("due_date")} type="date"/></Fld>
+      <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Pendente","Pago","Cancelado"]}/></Fld>
+      <Btn full primary onClick={savePay} style={{marginTop:8}}>{loading?"Salvando...":"Salvar"}</Btn>
     </Modal>}
   </div>);
 };
 
-const Obras = ({obras,clients,projects,reload}) => {
-  const [modal,setModal]=useState(false);
-  const [form,setForm]=useState({});
-  const [loading,setLoading]=useState(false);
-  const sf=k=>v=>setForm(p=>({...p,[k]:v}));
-  const save=async()=>{
-    if(!form.client_id)return alert("Cliente obrigatorio!");
-    setLoading(true);
-    const d={client_id:+form.client_id,project_id:+form.project_id||null,address:form.address,responsible:form.responsible,visits:+form.visits||0,status:form.status||"Iniciando"};
-    if(form.id){await sb.from("obras").update(d).eq("id",form.id);}else{await sb.from("obras").insert(d);}
-    await reload();setLoading(false);setModal(false);
-  };
-  return(<div>
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-      <h2 style={{fontSize:22,fontWeight:900,color:C.text,margin:0}}>Obras</h2>
-      <Btn primary onClick={()=>{setForm({status:"Iniciando",visits:"0"});setModal(true);}}>+ Nova Obra</Btn>
-    </div>
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
-      {obras.map(o=>{const cl=clients.find(c=>c.id===o.client_id);const pj=projects.find(p=>p.id===o.project_id);return(<div key={o.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:20}}>
-        <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
-          <div><h3 style={{margin:0,fontSize:15,fontWeight:800,color:C.text}}>{cl?.name||"-"}</h3><p style={{margin:"2px 0 0",fontSize:12,color:C.textMuted}}>{o.address}</p></div>
-          <span style={{padding:"4px 10px",borderRadius:6,background:C.infoBg,color:C.info,fontSize:11,fontWeight:700}}>{o.status}</span>
-        </div>
-        <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,display:"flex",justifyContent:"space-between"}}>
-          <div><p style={{margin:0,fontSize:11,color:C.textMuted}}>Responsavel</p><p style={{margin:0,fontSize:13,color:C.text,fontWeight:600}}>{o.responsible||"-"}</p></div>
-          <div style={{textAlign:"right"}}><p style={{margin:0,fontSize:11,color:C.textMuted}}>Visitas</p><p style={{margin:0,fontSize:24,fontWeight:900,color:C.accent}}>{o.visits||0}</p></div>
-        </div>
-        {pj&&<p style={{margin:"10px 0 0",fontSize:11,color:C.textFaint,fontFamily:"monospace"}}>{pj.code}</p>}
-        <div style={{display:"flex",gap:8,marginTop:12}}>
-          <button onClick={()=>{setForm({...o,client_id:String(o.client_id),project_id:String(o.project_id||""),visits:String(o.visits||0)});setModal(true);}} style={{background:"none",border:"none",cursor:"pointer",color:C.info,fontSize:13}}>✏️ Editar</button>
-          <button onClick={async()=>{if(!confirm("Excluir?"))return;await sb.from("obras").delete().eq("id",o.id);await reload();}} style={{background:"none",border:"none",cursor:"pointer",color:C.danger,fontSize:13}}>🗑️ Excluir</button>
-        </div>
-      </div>);})}
-      {obras.length===0&&<div style={{gridColumn:"1/-1",padding:40,textAlign:"center",color:C.textMuted}}>Nenhuma obra</div>}
-    </div>
-    {modal&&<Modal title={form.id?"Editar Obra":"Nova Obra"} onClose={()=>setModal(false)}>
-      <G2><Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld><Fld label="Projeto"><Sel value={form.project_id||""} onChange={sf("project_id")} options={projects.map(p=>({value:p.id,label:p.code}))}/></Fld></G2>
-      <Fld label="Endereco"><Inp value={form.address||""} onChange={sf("address")}/></Fld>
-      <G2><Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld><Fld label="Visitas"><Inp value={form.visits||""} onChange={sf("visits")} type="number"/></Fld></G2>
-      <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={["Iniciando","Em andamento","Paralisada","Concluida"]}/></Fld>
-      <div style={{display:"flex",gap:12}}><Btn primary onClick={save} style={{flex:1}}>{loading?"Salvando...":"Salvar"}</Btn><Btn onClick={()=>setModal(false)}>Cancelar</Btn></div>
-    </Modal>}
-  </div>);
-};
-
-const NAV=[{k:"dashboard",l:"Dashboard",ic:"📊"},{k:"clients",l:"Clientes",ic:"👥"},{k:"projects",l:"Projetos",ic:"📐"},{k:"documentos",l:"Documentos",ic:"📁"},{k:"laudos",l:"Laudos",ic:"📋"},{k:"obras",l:"Obras",ic:"🏗️"},{k:"financial",l:"Financeiro",ic:"💰"}];
+const NAV=[{k:"dashboard",l:"Início",ic:"📊"},{k:"clients",l:"Clientes",ic:"👥"},{k:"projects",l:"Projetos",ic:"📐"},{k:"documentos",l:"Docs",ic:"📁"},{k:"laudos",l:"Laudos",ic:"📋"},{k:"financial",l:"Financeiro",ic:"💰"}];
 
 function App(){
   const [page,setPage]=useState("dashboard");
-  const [open,setOpen]=useState(true);
   const [loading,setLoading]=useState(true);
   const [clients,setClients]=useState([]);
   const [projects,setProjects]=useState([]);
@@ -567,40 +539,37 @@ function App(){
     setLoading(false);
   };
   useEffect(()=>{loadAll();},[]);
-  const W=open?220:60;
+
   return(
-    <div style={{display:"flex",minHeight:"100vh",background:C.bg,color:C.text,fontFamily:"'Inter',system-ui,sans-serif"}}>
-      <aside style={{width:W,minHeight:"100vh",background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",transition:"width 0.2s ease",overflow:"hidden",position:"sticky",top:0,maxHeight:"100vh"}}>
-        <div style={{padding:open?"20px 16px 18px":"18px 12px",borderBottom:`1px solid ${C.border}`}}>
-          {open?(<div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:34,height:34,borderRadius:8,background:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:900,color:"#000",flexShrink:0}}>PL</div><div><p style={{margin:0,fontSize:14,fontWeight:900,color:C.text}}>PLSilva</p><p style={{margin:0,fontSize:9,color:C.textMuted,textTransform:"uppercase",letterSpacing:"0.1em"}}>Engenharia</p></div></div>):(<div style={{width:34,height:34,borderRadius:8,background:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:900,color:"#000"}}>PL</div>)}
-        </div>
-        <nav style={{flex:1,padding:"10px 6px",overflowY:"auto"}}>
-          {NAV.map(item=>{const active=page===item.k;return(
-            <button key={item.k} onClick={()=>setPage(item.k)} title={!open?item.l:""}
-              style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:open?"9px 12px":"9px 0",borderRadius:8,border:"none",cursor:"pointer",textAlign:"left",background:active?C.accentDim:"transparent",color:active?C.accentText:C.textMuted,fontSize:12,fontWeight:active?700:500,marginBottom:2,justifyContent:open?"flex-start":"center",borderLeft:active?`3px solid ${C.accent}`:"3px solid transparent"}}
-              onMouseEnter={e=>{if(!active){e.currentTarget.style.background=C.surfaceHover;e.currentTarget.style.color=C.text;}}}
-              onMouseLeave={e=>{if(!active){e.currentTarget.style.background="transparent";e.currentTarget.style.color=C.textMuted;}}}
-            ><span style={{fontSize:16,flexShrink:0}}>{item.ic}</span>{open&&<span style={{whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{item.l}</span>}</button>
-          );})}
-        </nav>
-        <div style={{padding:"10px 6px",borderTop:`1px solid ${C.border}`}}>
-          <button onClick={()=>setOpen(o=>!o)} style={{display:"flex",alignItems:"center",justifyContent:open?"flex-start":"center",gap:10,width:"100%",padding:"9px 12px",borderRadius:8,border:"none",cursor:"pointer",background:"transparent",color:C.textMuted,fontSize:12}}
-            onMouseEnter={e=>e.currentTarget.style.background=C.surfaceHover} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-            <span>{open?"◀":"▶"}</span>{open&&<span>Recolher</span>}
-          </button>
-        </div>
-      </aside>
-      <main style={{flex:1,padding:"28px 32px",overflowY:"auto",minWidth:0}}>
+    <div style={{display:"flex",flexDirection:"column",minHeight:"100vh",background:C.bg}}>
+      {/* Header */}
+      <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"12px 16px",display:"flex",alignItems:"center",gap:10,position:"sticky",top:0,zIndex:100,paddingTop:"calc(12px + env(safe-area-inset-top, 0px))"}}>
+        <div style={{width:32,height:32,borderRadius:8,background:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:"#000"}}>PL</div>
+        <div><p style={{margin:0,fontSize:14,fontWeight:900,color:C.text}}>PLSilva Engenharia</p></div>
+        <button onClick={loadAll} style={{marginLeft:"auto",background:"none",border:"none",color:C.textMuted,fontSize:20,cursor:"pointer",padding:4}}>↺</button>
+      </div>
+
+      {/* Content */}
+      <div style={{flex:1,padding:16,paddingBottom:80,overflowY:"auto"}}>
         {loading?<Loading/>:<>
           {page==="dashboard"&&<Dashboard clients={clients} projects={projects} laudos={laudos} receivables={receivables} payables={payables}/>}
           {page==="clients"&&<Clients clients={clients} projects={projects} laudos={laudos} receivables={receivables} reload={loadAll}/>}
           {page==="projects"&&<Projects projects={projects} clients={clients} receivables={receivables} reload={loadAll}/>}
           {page==="documentos"&&<Documentos projects={projects}/>}
           {page==="laudos"&&<Laudos laudos={laudos} clients={clients} reload={loadAll}/>}
-          {page==="obras"&&<Obras obras={obras} clients={clients} projects={projects} reload={loadAll}/>}
           {page==="financial"&&<Financial receivables={receivables} payables={payables} clients={clients} projects={projects} reload={loadAll}/>}
         </>}
-      </main>
+      </div>
+
+      {/* Bottom Navigation */}
+      <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,display:"flex",paddingBottom:"env(safe-area-inset-bottom, 0px)",zIndex:100}}>
+        {NAV.map(item=>{const active=page===item.k;return(
+          <button key={item.k} onClick={()=>setPage(item.k)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"10px 4px",border:"none",cursor:"pointer",background:"transparent",color:active?C.accent:C.textMuted,fontSize:10,fontWeight:active?700:500,gap:3,minHeight:56}}>
+            <span style={{fontSize:20}}>{item.ic}</span>
+            <span>{item.l}</span>
+          </button>
+        );})}
+      </div>
     </div>
   );
 }
