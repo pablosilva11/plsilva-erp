@@ -973,7 +973,7 @@ const Orcamentos = ({clients}) => {
     try {
       // Gera via API Anthropic para criar o DOCX base64
       const listaServicos = servicosAtivos.map(s => s.nome).join(", ");
-      const detalhesServicos = servicosAtivos.map(s => `- ${s.obs}`).join("\n");
+      const detalhesServicos = servicosAtivos.map(s => "- " + s.obs).join("\n");
 
       const nl = "\n";
       const conteudo = [
@@ -1014,7 +1014,7 @@ const Orcamentos = ({clients}) => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Orcamento-PR${form.numero}_${form.ano}-${form.cliente_nome.split(" ")[0]}.txt`;
+      a.download = "Orcamento-PR"+form.numero+"_"+form.ano+"-"+form.cliente_nome.split(" ")[0]+".txt";
       a.click();
       URL.revokeObjectURL(url);
       alert("Arquivo gerado! Abra no Word para formatar e converter em PDF.");
