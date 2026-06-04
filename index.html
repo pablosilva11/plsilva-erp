@@ -363,11 +363,40 @@ const Relatorios = ({receivables,payables,projects,clients}) => {
   return(<div>
     <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:"0 0 4px"}}>Relatórios</h2>
     <p style={{color:C.textMuted,fontSize:13,marginBottom:16}}>Análise financeira histórica</p>
-    <div style={{background:`linear-gradient(135deg,${C.accentDim},#1a1000)`,border:`1px solid ${C.accent}44`,borderRadius:14,padding:20,marginBottom:16,textAlign:"center"}}>
-      <p style={{margin:"0 0 4px",fontSize:11,color:C.accentText,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.08em"}}>Receita Total Histórica</p>
-      <p style={{margin:0,fontSize:28,fontWeight:900,color:C.accent}}>{fmt(totalGeral)}</p>
-      <p style={{margin:"4px 0 0",fontSize:12,color:C.textMuted}}>{receivables.filter(r=>r.status==="Recebido").length} recebimentos · {clients.length} clientes</p>
-    </div>
+    {/* Cards: historico pequeno, ano medio, mes grande */}
+    {(()=>{
+      const anoAtual = new Date().getFullYear().toString();
+      const mesAtual = String(new Date().getMonth()+1).padStart(2,"0");
+      const prefixMes = anoAtual+"-"+mesAtual;
+      const totalAno = receivables.filter(r=>r.status==="Recebido"&&(r.due_date||"").startsWith(anoAtual)).reduce((s,r)=>s+r.value,0);
+      const totalMes = receivables.filter(r=>r.status==="Recebido"&&(r.due_date||"").startsWith(prefixMes)).reduce((s,r)=>s+r.value,0);
+      const nomeMes = new Date().toLocaleDateString("pt-BR",{month:"long"});
+      return(<>
+        {/* Historico - pequeno */}
+        <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"10px 14px",marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:11,color:C.textMuted,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.05em"}}>Receita Total Histórica</span>
+          <span style={{fontSize:14,fontWeight:800,color:C.accentText}}>{fmt(totalGeral)}</span>
+        </div>
+
+        {/* Acumulado do Ano - medio */}
+        <div style={{background:"linear-gradient(135deg,#0a1a2a,#0d2035)",border:"1px solid "+C.info+"44",borderRadius:12,padding:16,marginBottom:10,borderLeft:"3px solid "+C.info}}>
+          <p style={{margin:"0 0 4px",fontSize:11,color:C.info,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em"}}>Acumulado {anoAtual}</p>
+          <p style={{margin:0,fontSize:24,fontWeight:900,color:C.text}}>{fmt(totalAno)}</p>
+          <p style={{margin:"3px 0 0",fontSize:11,color:C.textMuted}}>
+            {totalGeral>0?(((totalAno/totalGeral)*100).toFixed(1)+"% do histórico"):""}
+          </p>
+        </div>
+
+        {/* Acumulado do Mes - grande destaque */}
+        <div style={{background:"linear-gradient(135deg,"+C.accentDim+",#1a1200)",border:"1px solid "+C.accent+"66",borderRadius:14,padding:20,marginBottom:16,borderLeft:"4px solid "+C.accent}}>
+          <p style={{margin:"0 0 6px",fontSize:12,color:C.accentText,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em"}}>Faturamento — {nomeMes.charAt(0).toUpperCase()+nomeMes.slice(1)}</p>
+          <p style={{margin:0,fontSize:32,fontWeight:900,color:C.accent}}>{fmt(totalMes)}</p>
+          <p style={{margin:"4px 0 0",fontSize:12,color:C.textMuted}}>
+            {totalAno>0?(((totalMes/totalAno)*100).toFixed(1)+"% do acumulado do ano"):""}
+          </p>
+        </div>
+      </>);
+    })()}
     <div style={{display:"flex",gap:4,background:C.graphite,borderRadius:10,padding:4,marginBottom:16}}>
       {[["anos","Por Ano"],["tipos","Por Tipo"],["fluxo","Fluxo de Caixa"]].map(([k,l])=>(
         <button key={k} onClick={()=>setAbaRel(k)} style={{flex:1,padding:"10px",borderRadius:8,border:"none",cursor:"pointer",background:abaRel===k?C.surface:"transparent",color:abaRel===k?C.text:C.textMuted,fontSize:12,fontWeight:700,minHeight:40}}>{l}</button>
