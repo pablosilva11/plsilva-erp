@@ -1552,7 +1552,311 @@ const Designer = ({projects}) => {
   </div>);
 };
 
+const SERVICOS_CONTRATO = [
+  {id:"arq",letra:"A",nome:"Anteprojeto / Projeto Arquitetônico"},
+  {id:"leg",letra:"B",nome:"Projeto Legal (Aprovação PMU)"},
+  {id:"pscip",letra:"C",nome:"PSCIP (Prevenção e Combate a Incêndio)"},
+  {id:"hidro",letra:"D",nome:"Projeto Hidrossanitário"},
+  {id:"estru",letra:"E",nome:"Projeto Estrutural"},
+  {id:"pgrcc",letra:"F",nome:"PGRCC"},
+  {id:"nbr",letra:"G",nome:"NBR 12.721"},
+  {id:"spda",letra:"H",nome:"SPDA"},
+  {id:"elet",letra:"I",nome:"Projeto Elétrico"},
+  {id:"int",letra:"J",nome:"Projeto de Interiores"},
+  {id:"glp",letra:"K",nome:"Projeto de GLP"},
+  {id:"maq",letra:"L",nome:"Maquete Eletrônica"},
+  {id:"rt",letra:"M",nome:"Responsabilidade Técnica (RT)"},
+  {id:"outro",letra:"N",nome:"Outros"},
+];
+
+const GeradorContrato = ({clients, onClose}) => {
+  const [step,setStep]=useState(1);
+  const [clienteId,setClienteId]=useState("");
+  const [contratoNome,setContratoNome]=useState("");
+  const [contratoCnpj,setContratoCnpj]=useState("");
+  const [contratoEnd,setContratoEnd]=useState("");
+  const [empDesc,setEmpDesc]=useState("");
+  const [empLocal,setEmpLocal]=useState("");
+  const [servicos,setServicos]=useState(SERVICOS_CONTRATO.map(s=>({...s,ativo:false,obs:""})));
+  const [obsPagamento,setObsPagamento]=useState("Na assinatura do contrato 25%, na aprovação do projeto junto à PMU 25%, na entrega do estrutural 25% e na entrega final 25%, sem emissão de NF.");
+  const [obsPrazo,setObsPrazo]=useState("Após a assinatura do contrato, até 15 dias úteis para apresentação do projeto arquitetônico. Projetos complementares em até 30 dias úteis após aprovação do arquitetônico.");
+  const [prazoPMU,setPrazoPMU]=useState("");
+  const [dataAssinatura,setDataAssinatura]=useState(new Date().toLocaleDateString("pt-BR"));
+  const [obsAdicionais,setObsAdicionais]=useState("");
+
+  const toggleS=i=>{const s=[...servicos];s[i]={...s[i],ativo:!s[i].ativo};setServicos(s);};
+  const updateObs=(i,v)=>{const s=[...servicos];s[i]={...s[i],obs:v};setServicos(s);};
+  const ativos=servicos.filter(s=>s.ativo);
+
+  const baixar=()=>{
+    if(!contratoNome||ativos.length===0){alert("Preencha contratante e selecione os serviços!");return;}
+    const SEP="================================================================";
+    const SUB="----------------------------------------------------------------";
+    const L=[];
+    const add=s=>L.push(s);
+
+    add("PLSilva Engenharia e Empreendimentos Imobiliários Ltda");
+    add("RUA JAMIL TANNUS N. 533 - B. LÍDICE - UBERLÂNDIA MG | (34) 3219.7318");
+    add(SEP);
+    add("");
+    add("              CONTRATO DE PRESTAÇÃO DE SERVIÇOS");
+    add("");
+    add(SEP);
+    add("CONTRATANTE:");
+    add(SEP);
+    add(contratoNome);
+    add("CNPJ: "+contratoCnpj);
+    add(contratoEnd);
+    add("");
+    add(SEP);
+    add("CONTRATADO:");
+    add(SEP);
+    add("PL SILVA ENGENHARIA E EMPREENDIMENTOS IMOBILIÁRIOS LTDA. ME");
+    add("CNPJ: 20596174/0001-76");
+    add("Rua Jamil Tannus, nº 533, Bairro Lídice, Uberlândia/MG");
+    add("Representante: PABLO LUIZ DA SILVA - Engenheiro Civil - CREA 112.881/D MG");
+    add("CPF: 066.628.326-50");
+    add("");
+    add(SEP);
+    add("CLÁUSULAS GERAIS");
+    add(SEP);
+    add("");
+    add("Pelo presente instrumento particular, as partes celebram este Contrato de");
+    add("Prestação de Serviços, regulado pelos arts. 593 a 609 do Código Civil,");
+    add("bem como pelas prescrições da Lei nº 5.194/66 e demais legislação correlata.");
+    add("");
+    add(SEP);
+    add("I - DO OBJETO");
+    add(SUB);
+    add("");
+    add("1) "+empDesc);
+    add("");
+    if(empLocal){add("1.1) "+empLocal);add("");}
+    add("1.2) Serviços contratados:");
+    add("");
+    ativos.forEach(s=>{
+      add("  "+s.letra+") "+s.nome);
+      if(s.obs)add("     Obs: "+s.obs);
+    });
+    add("");
+    add("1.3) Plotagens e taxas de aprovação não estão inclusas neste contrato.");
+    add("1.4) A execução ou administração da obra não é objeto deste contrato.");
+    add("");
+    add(SEP);
+    add("II - DAS OBRIGAÇÕES DO CONTRATADO");
+    add(SUB);
+    add("");
+    add("2) Constituem obrigações do CONTRATADO:");
+    add("  a) Elaborar os projetos conforme normas técnicas vigentes;");
+    add("  b) Garantir a aprovação dos projetos perante os órgãos competentes;");
+    add("  c) Manter pessoal qualificado para execução dos serviços;");
+    add("");
+    add(SEP);
+    add("III - DAS OBRIGAÇÕES DA CONTRATANTE");
+    add(SUB);
+    add("");
+    add("3) Constituem obrigações da CONTRATANTE:");
+    add("  a) Instalar placa de identificação da obra conforme exigência do CREA;");
+    add("  b) Efetuar pagamento de taxas de tramitação e aprovação dos projetos;");
+    add("  c) Fornecer todos os documentos necessários à execução dos serviços;");
+    add("  d) Efetuar o pagamento dos honorários no tempo e modo convencionados;");
+    add("");
+    add(SEP);
+    add("IV - DO PRAZO");
+    add(SUB);
+    add("");
+    add("4) "+obsPrazo);
+    if(prazoPMU){add("");add("   Data prevista para protocolo na PMU: "+prazoPMU+".");}
+    add("");
+    add(SEP);
+    add("V - DA REMUNERAÇÃO E CONDIÇÕES DE PAGAMENTO");
+    add(SUB);
+    add("");
+    add("5) "+obsPagamento);
+    add("");
+    if(obsAdicionais){
+      add(SEP);
+      add("OBSERVAÇÕES ADICIONAIS");
+      add(SUB);
+      add("");
+      add(obsAdicionais);
+      add("");
+    }
+    add(SEP);
+    add("VI - DOS DIREITOS AUTORAIS");
+    add(SUB);
+    add("");
+    add("6) Os projetos estão protegidos pela Lei nº 9.610/98 e somente poderão ser");
+    add("   utilizados para o fim e local indicados neste instrumento.");
+    add("");
+    add(SEP);
+    add("VII - DA CLÁUSULA PENAL");
+    add(SUB);
+    add("");
+    add("7) Em caso de rescisão injustificada pela CONTRATANTE, será devida multa");
+    add("   de 20% sobre o valor total contratado, além dos valores já incorridos.");
+    add("");
+    add(SEP);
+    add("VIII - DO FORO");
+    add(SUB);
+    add("");
+    add("8) As partes elegem o foro da comarca de Uberlândia/MG para dirimir");
+    add("   quaisquer questões oriundas do presente instrumento.");
+    add("");
+    add(SEP);
+    add("E por estarem assim justas e contratadas, as partes assinam o presente");
+    add("instrumento em 2 (duas) vias de igual forma e teor.");
+    add("");
+    add("");
+    add("Uberlândia/MG, "+dataAssinatura+".");
+    add("");
+    add("");
+    add("_______________________________________________");
+    add("PL SILVA ENGENHARIA E EMPREENDIMENTOS IMOBILIÁRIOS LTDA. ME");
+    add("CNPJ: 20596174/0001-76");
+    add("Pablo Luiz da Silva - CREA 112.881/D MG");
+    add("");
+    add("");
+    add("_______________________________________________");
+    add(contratoNome);
+    add("CNPJ: "+contratoCnpj);
+    add("");
+    add(SEP);
+    add("RUA JAMIL TANNUS N. 533 - B. LÍDICE - UBERLÂNDIA MG | (34) 3219.7318");
+
+    const txt=L.join("\n");
+    const blob=new Blob([txt],{type:"text/plain;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download="Contrato-"+contratoNome.split(" ")[0]+"-"+dataAssinatura.replace(/\//g,"-")+".txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const stepLabel=["Contratante","Serviços","Condições","Gerar"];
+  return(<div style={{paddingBottom:20}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Gerar Contrato</h2>
+      <button onClick={onClose} style={{background:"none",border:"none",color:C.accent,fontSize:14,cursor:"pointer"}}>← Voltar</button>
+    </div>
+
+    {/* Steps */}
+    <div style={{display:"flex",gap:6,marginBottom:20}}>
+      {stepLabel.map((s,i)=>(
+        <div key={i} style={{flex:1,padding:"8px 4px",borderRadius:8,textAlign:"center",background:step===i+1?C.accentDim:step>i+1?"#0a2e1a":C.surface,border:"1px solid "+(step===i+1?C.accent:step>i+1?C.success:C.border)}}>
+          <span style={{fontSize:10,fontWeight:700,color:step===i+1?C.accentText:step>i+1?C.success:C.textMuted}}>{step>i+1?"✓ ":""}{s}</span>
+        </div>
+      ))}
+    </div>
+
+    {/* STEP 1: Contratante */}
+    {step===1&&<div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Dados do Contratante</h3>
+        <Fld label="Selecionar cliente cadastrado">
+          <select value={clienteId} onChange={e=>{const c=clients.find(x=>x.id===+e.target.value);setClienteId(e.target.value);if(c){setContratoNome(c.name);setContratoCnpj(c.doc||"");setContratoEnd((c.address||"")+(c.city?", "+c.city:"")+(c.state?"/"+c.state:""));}}}
+            style={{width:"100%",padding:"14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:16,outline:"none",minHeight:48}}>
+            <option value="">Selecione ou preencha abaixo...</option>
+            {clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </Fld>
+        <Fld label="Nome / Razão Social"><Inp value={contratoNome} onChange={setContratoNome} placeholder="Nome do contratante"/></Fld>
+        <Fld label="CNPJ / CPF"><Inp value={contratoCnpj} onChange={setContratoCnpj} placeholder="00.000.000/0001-00"/></Fld>
+        <Fld label="Endereço completo"><Inp value={contratoEnd} onChange={setContratoEnd} placeholder="Rua, nº, Bairro, CEP, Cidade/UF"/></Fld>
+        <Fld label="Data de Assinatura"><Inp value={dataAssinatura} onChange={setDataAssinatura} placeholder="01 de junho de 2026"/></Fld>
+      </div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Descrição do Empreendimento</h3>
+        <Fld label="Objeto do contrato">
+          <textarea value={empDesc} onChange={e=>setEmpDesc(e.target.value)} rows={3} placeholder="Ex: projetos arquitetônicos, hidrossanitário, estrutural e PSCIP para empreendimento residencial..."
+            style={{width:"100%",padding:"12px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:15,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+        </Fld>
+        <Fld label="Localização / Caracterização (opcional)">
+          <textarea value={empLocal} onChange={e=>setEmpLocal(e.target.value)} rows={2} placeholder="Ex: Empreendimento residencial vertical, 10 pavimentos, localizado na Rua X..."
+            style={{width:"100%",padding:"12px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:15,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+        </Fld>
+      </div>
+      <Btn full primary onClick={()=>{if(!contratoNome||!empDesc)return alert("Preencha contratante e objeto!");setStep(2);}}>Próximo →</Btn>
+    </div>}
+
+    {/* STEP 2: Serviços */}
+    {step===2&&<div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 4px",fontSize:14,fontWeight:800,color:C.text}}>Serviços Contratados</h3>
+        <p style={{margin:"0 0 14px",fontSize:12,color:C.textMuted}}>Marque os serviços e adicione observações se necessário</p>
+        {servicos.map((s,i)=>(
+          <div key={s.id} style={{marginBottom:12,paddingBottom:12,borderBottom:"1px solid "+C.border}}>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:s.ativo?10:0}}>
+              <div onClick={()=>toggleS(i)} style={{width:26,height:26,borderRadius:6,border:"2px solid "+(s.ativo?C.accent:C.border),background:s.ativo?C.accentDim:"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",flexShrink:0}}>
+                {s.ativo&&<span style={{color:C.accent,fontSize:16,fontWeight:900,lineHeight:1}}>✓</span>}
+              </div>
+              <span style={{fontSize:14,fontWeight:s.ativo?700:400,color:s.ativo?C.text:C.textMuted,cursor:"pointer"}} onClick={()=>toggleS(i)}>{s.letra}) {s.nome}</span>
+            </div>
+            {s.ativo&&<div style={{marginLeft:38}}>
+              <textarea value={s.obs} onChange={e=>updateObs(i,e.target.value)} rows={2} placeholder="Observação específica deste serviço (opcional)..."
+                style={{width:"100%",padding:"10px",background:C.bg,border:"1px solid "+C.border,borderRadius:8,color:C.text,fontSize:14,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+            </div>}
+          </div>
+        ))}
+      </div>
+      <Btn full primary onClick={()=>{if(ativos.length===0)return alert("Selecione pelo menos 1 serviço!");setStep(3);}}>Próximo →</Btn>
+    </div>}
+
+    {/* STEP 3: Condições */}
+    {step===3&&<div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>💰 Condições de Pagamento</h3>
+        <textarea value={obsPagamento} onChange={e=>setObsPagamento(e.target.value)} rows={4}
+          style={{width:"100%",padding:"12px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:15,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+      </div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>📅 Prazos</h3>
+        <textarea value={obsPrazo} onChange={e=>setObsPrazo(e.target.value)} rows={3}
+          style={{width:"100%",padding:"12px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:15,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+        <div style={{marginTop:12}}>
+          <label style={{display:"block",fontSize:12,fontWeight:700,color:C.textMuted,marginBottom:6,textTransform:"uppercase"}}>Data prevista protocolo PMU</label>
+          <Inp value={prazoPMU} onChange={setPrazoPMU} placeholder="Ex: 30 de junho de 2026"/>
+        </div>
+      </div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>📝 Observações Adicionais</h3>
+        <textarea value={obsAdicionais} onChange={e=>setObsAdicionais(e.target.value)} rows={3} placeholder="Cláusulas especiais, condições específicas deste contrato..."
+          style={{width:"100%",padding:"12px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:15,outline:"none",resize:"none",boxSizing:"border-box"}}/>
+      </div>
+      <Btn full primary onClick={()=>setStep(4)}>Próximo →</Btn>
+    </div>}
+
+    {/* STEP 4: Revisar e Gerar */}
+    {step===4&&<div>
+      <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
+        <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>📋 Revisão</h3>
+        <div style={{padding:"10px 0",borderBottom:"1px solid "+C.border}}>
+          <p style={{margin:0,fontSize:11,color:C.textMuted}}>Contratante</p>
+          <p style={{margin:0,fontSize:14,fontWeight:700,color:C.text}}>{contratoNome}</p>
+          <p style={{margin:0,fontSize:12,color:C.textMuted}}>{contratoCnpj}</p>
+        </div>
+        <div style={{padding:"10px 0",borderBottom:"1px solid "+C.border}}>
+          <p style={{margin:"0 0 6px",fontSize:11,color:C.textMuted}}>{"Serviços ("+ativos.length+")"}</p>
+          {ativos.map(s=><div key={s.id} style={{display:"flex",gap:6,marginBottom:4}}><span style={{color:C.success}}>✓</span><span style={{fontSize:13,color:C.text}}>{s.letra}) {s.nome}</span></div>)}
+        </div>
+        <div style={{padding:"10px 0"}}>
+          <p style={{margin:0,fontSize:11,color:C.textMuted}}>Data de assinatura</p>
+          <p style={{margin:0,fontSize:14,fontWeight:700,color:C.text}}>{dataAssinatura}</p>
+        </div>
+      </div>
+      <div style={{background:"#0a2e1a",border:"1px solid "+C.success+"44",borderRadius:12,padding:16,marginBottom:14}}>
+        <p style={{margin:"0 0 4px",fontSize:13,fontWeight:700,color:C.success}}>📄 Gerar Contrato</p>
+        <p style={{margin:0,fontSize:12,color:C.textMuted}}>Baixa um arquivo .txt formatado. Abra no Word, formate e exporte como PDF para assinar.</p>
+      </div>
+      <Btn full primary onClick={baixar} style={{marginBottom:12}}>⬇️ Baixar Contrato</Btn>
+      <Btn full onClick={()=>setStep(1)}>Novo Contrato</Btn>
+    </div>}
+  </div>);
+};
+
 const Contratos = ({clients,projects}) => {
+  const [gerador,setGerador]=useState(false);
   const [contratos,setContratos]=useState([]);
   const [loading,setLoading]=useState(true);
   const [modal,setModal]=useState(false);
@@ -1594,12 +1898,17 @@ const Contratos = ({clients,projects}) => {
   });
 
   return(<div>
+    {gerador&&<GeradorContrato clients={clients} onClose={()=>setGerador(false)}/>}
+    {!gerador&&<>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
       <div>
         <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:"0 0 2px"}}>Contratos</h2>
         <p style={{fontSize:12,color:C.textMuted,margin:0}}>{contratos.length+" contrato(s) cadastrado(s)"}</p>
       </div>
-      <Btn small primary onClick={()=>{setForm({status:"Pendente"});setModal(true);}}>+ Novo</Btn>
+      <div style={{display:"flex",gap:8}}>
+        <Btn small onClick={()=>setGerador(true)} style={{background:"#0a2e1a",color:C.success,border:"1px solid "+C.success+"44"}}>📄 Gerar</Btn>
+        <Btn small primary onClick={()=>{setForm({status:"Pendente"});setModal(true);}}>+ Registrar</Btn>
+      </div>
     </div>
 
     <div style={{marginBottom:12}}>
