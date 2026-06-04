@@ -472,6 +472,78 @@ const Clients = ({clients,projects,laudos,receivables,reload}) => {
     await reload();setLoading(false);setModal(false);setSel(null);
   };
   const del=async(id)=>{if(!confirm("Excluir?"))return;await sb.from("clients").delete().eq("id",id);await reload();setSel(null);};
+  const [mergeMode,setMergeMode]=useState(false);
+  const [mergeMain,setMergeMain]=useState(null);
+  const [mergeSel,setMergeSel]=useState([]);
+  const [mergeSearch,setMergeSearch]=useState("");
+
+  const doMerge=async()=>{
+    if(!mergeMain||mergeSel.length===0)return alert("Selecione o cliente principal e os duplicados!");
+    if(!confirm("Mesclar "+mergeSel.length+" cliente(s) em '"+mergeMain.name+"'? Esta acao nao pode ser desfeita!"))return;
+    for(const dup of mergeSel){
+      await sb.from("financials_receivables").update({client_id:mergeMain.id}).eq("client_id",dup.id);
+      await sb.from("projects").update({client_id:mergeMain.id}).eq("client_id",dup.id);
+      await sb.from("laudos").update({client_id:mergeMain.id}).eq("client_id",dup.id);
+      await sb.from("clients").delete().eq("id",dup.id);
+    }
+    await reload();
+    setMergeMode(false);setMergeMain(null);setMergeSel([]);setMergeSearch("");
+    alert("Clientes mesclados com sucesso!");
+  };
+
+  if(mergeMode){
+    const mergeList=clients.filter(c=>c.name?.toLowerCase().includes(mergeSearch.toLowerCase()));
+    return(<div>
+      <button onClick={()=>{setMergeMode(false);setMergeMain(null);setMergeSel([]);}} style={{background:"none",border:"none",color:C.accent,fontSize:16,cursor:"pointer",marginBottom:16,padding:0}}>← Voltar</button>
+      <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:"0 0 4px"}}>Mesclar Clientes</h2>
+      <p style={{color:C.textMuted,fontSize:13,marginBottom:16}}>Selecione o cliente principal e marque os duplicados para remover</p>
+
+      {mergeMain&&<div style={{background:"#0a2e1a",border:"1px solid "+C.success+"44",borderRadius:12,padding:14,marginBottom:14}}>
+        <p style={{margin:"0 0 4px",fontSize:11,color:C.success,fontWeight:700,textTransform:"uppercase"}}>Cliente Principal</p>
+        <p style={{margin:0,fontSize:15,fontWeight:800,color:C.text}}>{mergeMain.name}</p>
+        <p style={{margin:"2px 0 0",fontSize:11,color:C.textMuted}}>Todos os dados serão reunidos neste cliente</p>
+      </div>}
+
+      {mergeSel.length>0&&<div style={{background:C.accentDim,border:"1px solid "+C.accent+"44",borderRadius:12,padding:14,marginBottom:14}}>
+        <p style={{margin:"0 0 8px",fontSize:11,color:C.accentText,fontWeight:700,textTransform:"uppercase"}}>{"Duplicados selecionados ("+mergeSel.length+")"}</p>
+        {mergeSel.map(c=>(
+          <div key={c.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+            <span style={{fontSize:13,color:C.text}}>{c.name}</span>
+            <button onClick={()=>setMergeSel(p=>p.filter(x=>x.id!==c.id))} style={{background:"none",border:"none",color:C.danger,cursor:"pointer",fontSize:16}}>×</button>
+          </div>
+        ))}
+      </div>}
+
+      <div style={{marginBottom:12}}>
+        <input value={mergeSearch} onChange={e=>setMergeSearch(e.target.value)} placeholder="Buscar cliente..."
+          style={{width:"100%",padding:"12px 14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:16,outline:"none",boxSizing:"border-box"}}/>
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+        {mergeList.slice(0,30).map(c=>{
+          const isMain=mergeMain?.id===c.id;
+          const isDup=mergeSel.find(x=>x.id===c.id);
+          return(<div key={c.id} style={{background:isMain?"#0a2e1a":isDup?C.accentDim:C.surface,border:"1px solid "+(isMain?C.success:isDup?C.accent:C.border),borderRadius:10,padding:"12px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div>
+              <p style={{margin:0,fontSize:14,fontWeight:700,color:C.text}}>{c.name}</p>
+              <p style={{margin:0,fontSize:11,color:C.textMuted}}>{c.city}/{c.state}</p>
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              {!isMain&&!isDup&&<button onClick={()=>setMergeMain(c)} style={{background:C.success+"22",color:C.success,border:"1px solid "+C.success+"44",borderRadius:6,padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>Principal</button>}
+              {!isMain&&!isDup&&<button onClick={()=>setMergeSel(p=>[...p,c])} style={{background:C.accentDim,color:C.accentText,border:"1px solid "+C.accent+"44",borderRadius:6,padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>Duplicado</button>}
+              {isMain&&<span style={{fontSize:11,color:C.success,fontWeight:700}}>✓ Principal</span>}
+              {isDup&&<span style={{fontSize:11,color:C.accentText,fontWeight:700}}>✓ Duplicado</span>}
+            </div>
+          </div>);
+        })}
+      </div>
+
+      {mergeMain&&mergeSel.length>0&&<Btn full primary onClick={doMerge}>
+        {"Mesclar "+mergeSel.length+" duplicado(s) em '"+mergeMain.name+"'"}
+      </Btn>}
+    </div>);
+  }
+
   if(sel){
     const sp=projects.filter(p=>p.client_id===sel.id);
     const totalR=receivables.filter(r=>r.client_id===sel.id&&r.status==="Recebido").reduce((s,r)=>s+r.value,0);
@@ -520,7 +592,10 @@ const Clients = ({clients,projects,laudos,receivables,reload}) => {
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
       <h2 style={{fontSize:20,fontWeight:900,color:C.text,margin:0}}>Clientes <span style={{fontSize:13,color:C.textMuted,fontWeight:400}}>({clients.length})</span></h2>
-      <Btn small primary onClick={()=>{setForm({type:"PF",state:"MG"});setModal(true);}}>+ Novo</Btn>
+      <div style={{display:"flex",gap:8}}>
+        <Btn small onClick={()=>setMergeMode(true)} style={{background:"#1a0a2a",color:C.purple,border:"1px solid "+C.purple+"44"}}>🔀 Mesclar</Btn>
+        <Btn small primary onClick={()=>{setForm({type:"PF",state:"MG"});setModal(true);}}>+ Novo</Btn>
+      </div>
     </div>
     <div style={{marginBottom:16}}><Inp value={search} onChange={setSearch} placeholder="Buscar cliente..."/></div>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
