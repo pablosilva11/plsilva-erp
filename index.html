@@ -1315,7 +1315,6 @@ const NAV=[
   {k:"clientes",l:"Clientes",ic:"👥"},
   {k:"projetos",l:"Projetos",ic:"📐"},
   {k:"documentos",l:"Docs",ic:"📁"},
-  {k:"laudos",l:"Projetos",ic:"📋"},
   {k:"relatorios",l:"Relatórios",ic:"📈"},
   {k:"orcamentos",l:"Orçamento",ic:"📄"},
   {k:"designer",l:"Designer",ic:"🎨"},
@@ -1332,14 +1331,13 @@ function App(){
   const [payables,setPayables]=useState([]);
   const loadAll=async()=>{
     setLoading(true);
-    const [c,p,l,r,py]=await Promise.all([
+    const [c,p,r,py]=await Promise.all([
       sb.from("clients").select("*").order("name"),
       sb.from("projects").select("*").order("created_at",{ascending:false}),
-      sb.from("laudos").select("*").order("created_at",{ascending:false}),
       sb.from("financials_receivables").select("*").order("due_date",{ascending:false}),
       sb.from("financials_payables").select("*").order("created_at",{ascending:false}),
     ]);
-    setClients(c.data||[]);setProjects(p.data||[]);setLaudos(l.data||[]);
+    setClients(c.data||[]);setProjects(p.data||[]);
     setReceivables(r.data||[]);setPayables(py.data||[]);
     setLoading(false);
   };
@@ -1357,7 +1355,6 @@ function App(){
           {page==="clientes"&&<Clients clients={clients} projects={projects} laudos={laudos} receivables={receivables} reload={loadAll}/>}
           {page==="projetos"&&<Projects projects={projects} clients={clients} receivables={receivables} reload={loadAll}/>}
           {page==="documentos"&&<Documentos projects={projects}/>}
-          {page==="laudos"&&<Laudos laudos={laudos} clients={clients} reload={loadAll}/>}
           {page==="relatorios"&&<Relatorios receivables={receivables} payables={payables} projects={projects} clients={clients}/>}
           {page==="orcamentos"&&<Orcamentos clients={clients}/>}
           {page==="designer"&&<Designer projects={projects}/>}
