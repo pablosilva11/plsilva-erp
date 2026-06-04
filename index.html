@@ -206,6 +206,32 @@ const PBar = ({value,max,color=C.accent}) => {
       ))}
       {projects.length===0&&<p style={{color:C.textMuted,fontSize:13}}>Nenhum projeto</p>}
     </div>
+
+    <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginTop:16}}>
+      <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>🚦 Pipeline de Projetos</h3>
+      {[
+        {label:"Orcamento enviado",status:"Orcamento",color:"#64748b"},
+        {label:"Contratados",status:"Contratado",color:C.info},
+        {label:"Em desenvolvimento",status:"Em desenvolvimento",color:C.purple},
+        {label:"Protocolados",status:"Protocolado",color:C.cyan},
+        {label:"Em analise",status:"Em analise",color:"#F97316"},
+        {label:"Aprovados",status:"Aprovado",color:C.success},
+      ].map(({label,status,color})=>{
+        const qtd=projects.filter(p=>p.status===status).length;
+        const val=projects.filter(p=>p.status===status).reduce((s,p)=>s+(p.value||0),0);
+        if(qtd===0)return null;
+        return(<div key={status} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid "+C.border}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:color,flexShrink:0}}/>
+            <span style={{fontSize:13,color:C.text}}>{label}</span>
+          </div>
+          <div style={{display:"flex",gap:8,alignItems:"center"}}>
+            <span style={{fontSize:13,fontWeight:800,color}}>{qtd} proj.</span>
+            <span style={{fontSize:11,color:C.textMuted}}>{fmt(val)}</span>
+          </div>
+        </div>);
+      })}
+    </div>
   </div>);
 };
 
