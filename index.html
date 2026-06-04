@@ -924,56 +924,111 @@ const Orcamentos = ({clients}) => {
 
   const baixar=()=>{
     if(!clienteNome||ativos.length===0||!valorTotal){alert("Preencha cliente, servicos e valor!");return;}
-    const linhas=[
-      "PROPOSTA PR"+num+"_"+new Date().getFullYear().toString().slice(-2),
-      "Uberlandia, "+data+".",
-      "",
-      "A",
-      clienteNome,
-      clienteEnd,
-      "",
-      "Ref.: Proposta de elaboracao de projetos.",
-      "",
-      "1.0 ESCOPO DOS SERVICOS",
-      "",
-      "- Elaboracao de projetos sendo "+ativos.map(s=>s.nome).join(", ")+".",
-      "",
-    ];
-    ativos.forEach(s=>linhas.push("- "+s.obs));
-    linhas.push("");
-    linhas.push("2.0 HONORARIOS E CONDICOES DE PAGAMENTO");
-    linhas.push("");
-    linhas.push("2.1 Referente ao item 1.1 sera cobrado R$ "+valorTotal+" ("+valorExtenso+") de honorarios.");
-    linhas.push("");
-    linhas.push("3.0 INCLUSOS:");
-    linhas.push("3.1 Honorarios Equipe Tecnica exceto RT de execucao da obra.");
-    linhas.push("3.2 ART (Anotacao de Responsabilidade Tecnica) perante o CREA;");
-    linhas.push("3.3 Tramitacao junto aos orgaos para aprovacao.");
-    linhas.push("3.4 Dimensionamento de meios preventivos e tramitacao junto ao Infoscip.");
-    linhas.push("3.5 Elaboracao do projeto hidrossanitario de abastecimento e esgotamento.");
-    linhas.push("3.6 Elaboracao de NB de acordo com parametros da PMU e Cartorio e PGRCC.");
-    linhas.push("3.7 "+visitas);
-    linhas.push("");
-    linhas.push("RUA JAMIL TANNUS N. 533 - B. LIDICE - UBERLANDIA MG (34) 3219.7318");
-    linhas.push("");
-    linhas.push("CONDICOES DE PAGAMENTO:");
-    linhas.push("- "+cond);
-    linhas.push("");
-    linhas.push("PRAZOS");
-    linhas.push("- "+prazo);
-    linhas.push("");
-    linhas.push("CONDICOES GERAIS");
-    linhas.push("- Caso ocorra rescisao do contrato, devera ser pago o valor proporcional ate a data.");
-    linhas.push("- Esta proposta e valida por 15 (quinze) dias corridos.");
-    linhas.push("- Nao inclusos taxas de analise e vistoria.");
-    linhas.push("");
-    linhas.push("RUA JAMIL TANNUS N. 533 - B. LIDICE - UBERLANDIA MG (34) 3219.7318");
-    const txt=linhas.join("\n");
+    const SEP = "================================================================";
+    const SUB = "----------------------------------------------------------------";
+    const L = [];
+    const add = (s) => L.push(s);
+
+    add("PLSilva Engenharia e Empreendimentos Imobiliarios Ltda");
+    add("RUA JAMIL TANNUS N. 533 - B. LIDICE - UBERLANDIA MG | (34) 3219.7318");
+    add(SEP);
+    add("");
+    add("Uberlandia, "+data+".");
+    add("                              PROPOSTA PR"+num+"_"+new Date().getFullYear().toString().slice(-2));
+    add("");
+    add("A");
+    add(clienteNome);
+    add(clienteEnd);
+    add("");
+    add("Ref.: Proposta de elaboracao de projetos.");
+    add("");
+    add(SEP);
+    add("1.0  ESCOPO DOS SERVICOS");
+    add(SUB);
+    add("");
+    add("  - Elaboracao de projetos sendo "+ativos.map(s=>s.nome).join(", ")+".");
+    add("");
+    ativos.forEach(s=>{add("  * "+s.obs);});
+    add("");
+    add(SEP);
+    add("2.0  HONORARIOS E CONDICOES DE PAGAMENTO");
+    add(SUB);
+    add("");
+    add("  2.1  Referente ao item 1.1 sera cobrado R$ "+valorTotal);
+    add("       ("+valorExtenso+") de honorarios.");
+    add("");
+    add(SEP);
+    add("3.0  INCLUSOS:");
+    add(SUB);
+    add("");
+    add("  3.1  Honorarios Equipe Tecnica (exceto RT de execucao da obra).");
+    add("  3.2  ART - Anotacao de Responsabilidade Tecnica perante o CREA.");
+    add("  3.3  Tramitacao junto aos orgaos para aprovacao.");
+    add("  3.4  PSCIP: dimensionamento preventivo e tramitacao junto ao Infoscip.");
+    add("  3.5  Projeto hidrossanitario de abastecimento e esgotamento sanitario.");
+    add("  3.6  NB conforme parametros da PMU, Cartorio e PGRCC.");
+    add("  3.7  "+visitas);
+    add("");
+    add(SEP);
+    add("4.0  NAO INCLUSOS:");
+    add(SUB);
+    add("");
+    add("  4.1  Taxas de analise e vistoria junto aos orgaos competentes.");
+    add("  4.2  RT (Responsabilidade Tecnica) de execucao da obra.");
+    add("  4.3  Sondagem do terreno.");
+    add("  4.4  Projetos nao listados no escopo acima.");
+    add("");
+    add(SEP);
+    add("CONDICOES DE PAGAMENTO:");
+    add(SUB);
+    add("");
+    add("  * "+cond);
+    add("");
+    add(SEP);
+    add("PRAZOS:");
+    add(SUB);
+    add("");
+    prazo.split("\n").forEach(l=>{if(l.trim())add("  * "+l.trim());});
+    add("");
+    add(SEP);
+    add("CONDICOES GERAIS:");
+    add(SUB);
+    add("");
+    add("  * Caso ocorra rescisao do contrato por decisao da Contratante antes do");
+    add("    termino de sua vigencia, devera ser pago o valor proporcional ate a data.");
+    add("  * Esta proposta e valida por 15 (quinze) dias corridos.");
+    add("    A disponibilidade de agenda pode ser alterada a qualquer momento.");
+    add("  * Nao inclusos taxas de analise e vistoria.");
+    add("");
+    add(SEP);
+    add("RUA JAMIL TANNUS N. 533 - B. LIDICE - UBERLANDIA MG | (34) 3219.7318");
+    add(SEP);
+    add("");
+    add("                        --- PORTIFOLIO ---");
+    add("");
+    add("A PL Silva Engenharia atua desde 2014 no mercado de engenharia civil");
+    add("e arquitetura em Uberlandia e regiao. Ao longo de nossa trajetoria,");
+    add("totalizamos mais de 600 projetos atendidos.");
+    add("");
+    add("CLIENTES E PARCEIROS:");
+    add("  Bari Construtora | HL Empreendimentos | Cobo Empreendimentos");
+    add("  Idealiza | Realiza | J&A Empreendimentos");
+    add("  Receita Federal do Brasil");
+    add("  Secretaria de Estado de Educacao de Minas Gerais");
+    add("");
+    add("RESPONSAVEL TECNICO:");
+    add("  Pablo Luiz da Silva - Engenheiro Civil");
+    add("  CREA 112.881/D MG");
+    add("");
+    add(SEP);
+    add("RUA JAMIL TANNUS N. 533 - B. LIDICE - UBERLANDIA MG | (34) 3219.7318");
+
+    const txt=L.join("\n");
     const blob=new Blob([txt],{type:"text/plain;charset=utf-8"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
     a.href=url;
-    a.download="Orcamento-"+clienteNome.split(" ")[0]+".txt";
+    a.download="Orcamento-PR"+num+"-"+clienteNome.split(" ")[0]+".txt";
     a.click();
     URL.revokeObjectURL(url);
   };
