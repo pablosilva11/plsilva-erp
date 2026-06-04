@@ -1315,11 +1315,11 @@ const Orcamentos = ({clients}) => {
     add("RUA JAMIL TANNUS N. 533 - B. LIDICE - UBERLANDIA MG | (34) 3219.7318");
 
     const txt=L.join("\n");
-    const blob=new Blob([txt],{type:"text/plain;charset=utf-8"});
+    const blob=new Blob([txt],{type:"application/msword;charset=utf-8"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
     a.href=url;
-    a.download="Orcamento-PR"+num+"-"+clienteNome.split(" ")[0]+".txt";
+    a.download="Orcamento-PR"+num+"-"+clienteNome.split(" ")[0]+".doc";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -1725,11 +1725,11 @@ const GeradorContrato = ({clients, onClose}) => {
     add("RUA JAMIL TANNUS N. 533 - B. LÍDICE - UBERLÂNDIA MG | (34) 3219.7318");
 
     const txt=L.join("\n");
-    const blob=new Blob([txt],{type:"text/plain;charset=utf-8"});
+    const blob=new Blob([txt],{type:"application/msword;charset=utf-8"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
     a.href=url;
-    a.download="Contrato-"+contratoNome.split(" ")[0]+"-"+dataAssinatura.replace(/\//g,"-")+".txt";
+    a.download="Contrato-"+contratoNome.split(" ")[0]+"-"+dataAssinatura.replace(/\//g,"-")+".doc";
     a.click();
     URL.revokeObjectURL(url);
   };
