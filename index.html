@@ -468,6 +468,24 @@ const Relatorios = ({receivables,payables,projects,clients}) => {
   </div>);
 };
 
+
+const EQUIPE_SOCIOS = ["Pablo","Michelle","Adrielli","Guilherme"];
+const EQUIPE_TERCEIROS = ["Barbara","Roberto","Daniel","Denizart"];
+
+const SUGESTAO_EQUIPE = {
+  "Arquitetonico":    {socios:["Pablo","Michelle","Adrielli"], terceiros:[]},
+  "Estrutural":       {socios:["Pablo","Guilherme"],           terceiros:[]},
+  "Hidrossanitario":  {socios:["Pablo"],                       terceiros:[]},
+  "Eletrico":         {socios:["Pablo"],                       terceiros:["Roberto","Daniel"]},
+  "PSCIP":            {socios:["Pablo","Michelle","Adrielli"], terceiros:[]},
+  "SPDA":             {socios:["Pablo","Guilherme"],           terceiros:[]},
+  "Regularizacao":    {socios:["Pablo","Michelle","Adrielli"], terceiros:[]},
+  "Compatibilizacao": {socios:["Pablo"],                       terceiros:[]},
+  "NBR 12721":        {socios:["Pablo","Michelle","Adrielli"], terceiros:[]},
+  "PGRCC":            {socios:["Pablo"],                       terceiros:[]},
+  "Interiores":       {socios:["Michelle","Adrielli"],         terceiros:["Barbara"]},
+  "Outros/Diversos":  {socios:["Pablo"],                       terceiros:["Denizart"]},
+};
 const CHECKLIST_PADRAO = {
   "Arquitetonico":["Contrato assinado","ART emitida","Levantamento realizado","Estudo preliminar","Anteprojeto","Projeto executivo","Aprovacao PMU","Entregue ao cliente"],
   "Estrutural":["Contrato assinado","ART emitida","Sondagem recebida","Memorial de calculo","Projeto estrutural","Revisao","Entregue ao cliente"],
@@ -544,6 +562,89 @@ const Projects = ({projects,clients,receivables,reload}) => {
         ))}
         {sel.description&&<p style={{margin:"12px 0 0",fontSize:13,color:C.textMuted}}>{sel.description}</p>}
       </div>
+      {/* DISTRIBUICAO DE EQUIPE */}
+      {(()=>{
+        const sugestao = SUGESTAO_EQUIPE[sel.type]||{socios:["Pablo"],terceiros:[]};
+        const keyTeam = "team_"+sel.id;
+        const saved = JSON.parse(localStorage.getItem(keyTeam)||"{}");
+        const updateTeam = (nome,campo,val) => {
+          const ns = {...saved, [nome]:{...(saved[nome]||{}), [campo]:val}};
+          localStorage.setItem(keyTeam, JSON.stringify(ns));
+          setSel({...sel,_team:Date.now()});
+        };
+        const totalDist = [...sugestao.socios,...sugestao.terceiros].reduce((s,n)=>s+parseFloat((saved[n]&&saved[n].valor)||0),0);
+        const saldo = (sel.value||0) - totalDist;
+        return(<div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+            <h3 style={{margin:0,fontSize:14,fontWeight:800,color:C.text}}>👥 Distribuição de Equipe</h3>
+            <div style={{textAlign:"right"}}>
+              <p style={{margin:0,fontSize:11,color:C.textMuted}}>Saldo</p>
+              <p style={{margin:0,fontSize:14,fontWeight:800,color:saldo>=0?C.success:C.danger}}>{fmt(saldo)}</p>
+            </div>
+          </div>
+
+          {sugestao.socios.length>0&&<>
+            <p style={{margin:"0 0 8px",fontSize:11,color:C.info,fontWeight:700,textTransform:"uppercase"}}>Sócios</p>
+            {sugestao.socios.map(nome=>{
+              const d = saved[nome]||{};
+              return(<div key={nome} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,padding:"10px 12px",background:C.bg,borderRadius:10,border:"1px solid "+C.border}}>
+                <div style={{width:34,height:34,borderRadius:"50%",background:C.infoBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:C.info,flexShrink:0}}>{nome[0]}</div>
+                <div style={{flex:1}}>
+                  <p style={{margin:0,fontSize:13,fontWeight:700,color:C.text}}>{nome}</p>
+                  <p style={{margin:0,fontSize:10,color:C.textMuted}}>Sócio</p>
+                </div>
+                <input
+                  type="number"
+                  value={d.valor||""}
+                  onChange={e=>updateTeam(nome,"valor",e.target.value)}
+                  placeholder="R$ 0,00"
+                  style={{width:110,padding:"8px 10px",background:C.surface,border:"1px solid "+C.border,borderRadius:8,color:C.text,fontSize:14,outline:"none",textAlign:"right"}}
+                  onFocus={e=>e.target.style.borderColor=C.info}
+                  onBlur={e=>e.target.style.borderColor=C.border}
+                />
+              </div>);
+            })}
+          </>}
+
+          {sugestao.terceiros.length>0&&<>
+            <p style={{margin:"8px 0 8px",fontSize:11,color:C.warning,fontWeight:700,textTransform:"uppercase"}}>Terceirizados</p>
+            {sugestao.terceiros.map(nome=>{
+              const d = saved[nome]||{};
+              return(<div key={nome} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,padding:"10px 12px",background:C.bg,borderRadius:10,border:"1px solid "+C.warning+"33"}}>
+                <div style={{width:34,height:34,borderRadius:"50%",background:C.warning+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:C.warning,flexShrink:0}}>{nome[0]}</div>
+                <div style={{flex:1}}>
+                  <p style={{margin:0,fontSize:13,fontWeight:700,color:C.text}}>{nome}</p>
+                  <p style={{margin:0,fontSize:10,color:C.textMuted}}>Terceirizado</p>
+                </div>
+                <input
+                  type="number"
+                  value={d.valor||""}
+                  onChange={e=>updateTeam(nome,"valor",e.target.value)}
+                  placeholder="R$ 0,00"
+                  style={{width:110,padding:"8px 10px",background:C.surface,border:"1px solid "+C.border,borderRadius:8,color:C.text,fontSize:14,outline:"none",textAlign:"right"}}
+                  onFocus={e=>e.target.style.borderColor=C.warning}
+                  onBlur={e=>e.target.style.borderColor=C.border}
+                />
+              </div>);
+            })}
+            <button onClick={()=>{
+              sugestao.terceiros.forEach(nome=>{
+                const val = parseFloat((saved[nome]&&saved[nome].valor)||0);
+                if(val>0){
+                  sb.from("financials_payables").insert({
+                    category:"Equipe",
+                    description:"Pagamento "+nome+" — "+sel.code+" ("+sel.type+")",
+                    value:val,
+                    status:"Pendente"
+                  }).then(()=>alert("Lancado em Contas a Pagar: "+nome+" — "+fmt(val)));
+                }
+              });
+            }} style={{width:"100%",padding:"10px",background:C.warning+"22",color:C.warning,border:"1px solid "+C.warning+"44",borderRadius:8,fontSize:13,fontWeight:700,cursor:"pointer",marginTop:4}}>
+              💸 Lançar terceirizados em Contas a Pagar
+            </button>
+          </>}
+        </div>);
+      })()}
       {/* CHECKLIST */}
       {(()=>{
         const items = CHECKLIST_PADRAO[sel.type]||CHECKLIST_PADRAO["Outros/Diversos"];
