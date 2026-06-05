@@ -754,15 +754,23 @@ const Clients = ({clients,projects,laudos,receivables,reload}) => {
   const [sel,setSel]=useState(null);
   const [form,setForm]=useState({});
   const [loading,setLoading]=useState(false);
-  const [filteredClients, setFilteredClients]=useState([]);
+  const [dbResults, setDbResults]=useState([]);
+  const [searching, setSearching]=useState(false);
+
   useEffect(()=>{
-    if(!search){setFilteredClients(clients.slice(0,50));return;}
-    const s=search.toLowerCase();
-    const found=clients.filter(c=>c.name?.toLowerCase().includes(s)||( c.doc||"").includes(search));
-    setFilteredClients(found.slice(0,100));
-  },[search,clients]);
-  const list=filteredClients;
-  useEffect(()=>{setFilteredClients(clients.slice(0,50));},[clients]);
+    if(!search||search.length<2){setDbResults([]);return;}
+    setSearching(true);
+    const timer=setTimeout(async()=>{
+      const {data}=await sb.from("clients").select("*")
+        .or("name.ilike.%"+search+"%,doc.ilike.%"+search+"%")
+        .limit(100);
+      setDbResults(data||[]);
+      setSearching(false);
+    },400);
+    return()=>clearTimeout(timer);
+  },[search]);
+
+  const list = search && search.length>=2 ? dbResults : clients.slice(0,50);
   const sf=k=>v=>setForm(p=>({...p,[k]:v}));
   const save=async()=>{
     if(!form.name)return alert("Nome obrigatorio!");
@@ -907,7 +915,7 @@ const Clients = ({clients,projects,laudos,receivables,reload}) => {
           </div>
         </div>
       ))}
-      {search&&clients.filter(c=>c.name?.toLowerCase().includes(search.toLowerCase())||(c.doc||"").includes(search)).length>100&&<p style={{textAlign:"center",color:C.textMuted,fontSize:13}}>Mostrando 100 resultados. Refine a busca.</p>}
+      {searching&&<p style={{textAlign:"center",color:C.textMuted,fontSize:13}}>Buscando...</p>}
       {list.length===0&&<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum cliente</div>}
     </div>
     {modal&&<Modal title="Novo Cliente" onClose={()=>setModal(false)}>
