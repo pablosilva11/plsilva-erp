@@ -487,6 +487,60 @@ const SUGESTAO_EQUIPE = {
   "Interiores":       {socios:["Michelle","Adrielli"],         terceiros:["Barbara"]},
   "Outros/Diversos":  {socios:["Pablo"],                       terceiros:["Denizart"]},
 };
+
+const ClienteBusca = ({value, onChange}) => {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  useEffect(()=>{
+    if(value && !selected){
+      sb.from("clients").select("id,name").eq("id",value).single().then(({data})=>{
+        if(data) setSelected(data);
+      });
+    }
+  },[value]);
+
+  useEffect(()=>{
+    if(!query||query.length<2){setResults([]);return;}
+    const timer=setTimeout(async()=>{
+      const {data}=await sb.from("clients").select("id,name")
+        .ilike("name","%"+query+"%").limit(20);
+      setResults(data||[]);
+    },300);
+    return()=>clearTimeout(timer);
+  },[query]);
+
+  return(<div style={{position:"relative"}}>
+    {selected?
+      <div style={{display:"flex",alignItems:"center",gap:8,padding:"12px 14px",background:C.bg,border:"1px solid "+C.accent,borderRadius:10,minHeight:48}}>
+        <span style={{flex:1,fontSize:15,color:C.text}}>{selected.name}</span>
+        <button onClick={()=>{setSelected(null);setQuery("");onChange("");}} style={{background:"none",border:"none",color:C.danger,fontSize:18,cursor:"pointer"}}>×</button>
+      </div>
+    :
+      <div>
+        <input value={query} onChange={e=>setQuery(e.target.value)}
+          onFocus={()=>setOpen(true)}
+          placeholder="Digite o nome do cliente..."
+          style={{width:"100%",padding:"14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:16,outline:"none",boxSizing:"border-box",minHeight:48}}
+          onBlur={()=>setTimeout(()=>setOpen(false),200)}
+        />
+        {open&&results.length>0&&<div style={{position:"absolute",top:"100%",left:0,right:0,background:C.surface,border:"1px solid "+C.accent,borderRadius:10,zIndex:500,maxHeight:200,overflowY:"auto",boxShadow:"0 8px 24px rgba(0,0,0,0.5)"}}>
+          {results.map(c=>(
+            <div key={c.id} onClick={()=>{setSelected(c);onChange(String(c.id));setQuery("");setOpen(false);}}
+              style={{padding:"12px 16px",cursor:"pointer",borderBottom:"1px solid "+C.border,fontSize:14,color:C.text}}
+              onMouseEnter={e=>e.currentTarget.style.background=C.surfaceHover}
+              onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              {c.name}
+            </div>
+          ))}
+        </div>}
+      </div>
+    }
+  </div>);
+};
+
 const CHECKLIST_PADRAO = {
   "Arquitetonico":["Contrato assinado","ART emitida","Levantamento realizado","Estudo preliminar","Anteprojeto","Projeto executivo","Aprovacao PMU","Entregue ao cliente"],
   "Estrutural":["Contrato assinado","ART emitida","Sondagem recebida","Memorial de calculo","Projeto estrutural","Revisao","Entregue ao cliente"],
@@ -684,7 +738,7 @@ const Projects = ({projects,clients,receivables,reload}) => {
       </div>
       {modal&&<Modal title="Editar Projeto" onClose={()=>setModal(false)}>
         <Fld label="Codigo"><Inp value={form.code||""} onChange={sf("code")}/></Fld>
-        <Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
+        <Fld label="Cliente"><ClienteBusca value={form.client_id||""} onChange={v=>sf("client_id")(v)}/></Fld>
         <Fld label="Tipo de Projeto"><Sel value={form.type||""} onChange={sf("type")} options={TIPOS_PROJETO}/></Fld>
         <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={STATUSES}/></Fld>
         <Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld>
@@ -737,7 +791,7 @@ const Projects = ({projects,clients,receivables,reload}) => {
     </div>
     {modal&&<Modal title="Novo Projeto" onClose={()=>setModal(false)}>
       <Fld label="Codigo"><Inp value={form.code||""} onChange={sf("code")} placeholder="PRJ-2024-001"/></Fld>
-      <Fld label="Cliente"><Sel value={form.client_id||""} onChange={sf("client_id")} options={clients.map(c=>({value:c.id,label:c.name}))}/></Fld>
+      <Fld label="Cliente"><ClienteBusca value={form.client_id||""} onChange={v=>sf("client_id")(v)}/></Fld>
       <Fld label="Tipo de Projeto"><Sel value={form.type||""} onChange={sf("type")} options={TIPOS_PROJETO}/></Fld>
       <Fld label="Status"><Sel value={form.status||""} onChange={sf("status")} options={STATUSES}/></Fld>
       <Fld label="Responsavel"><Inp value={form.responsible||""} onChange={sf("responsible")}/></Fld>
