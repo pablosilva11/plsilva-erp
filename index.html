@@ -754,7 +754,15 @@ const Clients = ({clients,projects,laudos,receivables,reload}) => {
   const [sel,setSel]=useState(null);
   const [form,setForm]=useState({});
   const [loading,setLoading]=useState(false);
-  const list=clients.filter(c=>c.name?.toLowerCase().includes(search.toLowerCase())||c.doc?.includes(search));
+  const [filteredClients, setFilteredClients]=useState([]);
+  useEffect(()=>{
+    if(!search){setFilteredClients(clients.slice(0,50));return;}
+    const s=search.toLowerCase();
+    const found=clients.filter(c=>c.name?.toLowerCase().includes(s)||( c.doc||"").includes(search));
+    setFilteredClients(found.slice(0,100));
+  },[search,clients]);
+  const list=filteredClients;
+  useEffect(()=>{setFilteredClients(clients.slice(0,50));},[clients]);
   const sf=k=>v=>setForm(p=>({...p,[k]:v}));
   const save=async()=>{
     if(!form.name)return alert("Nome obrigatorio!");
@@ -891,7 +899,7 @@ const Clients = ({clients,projects,laudos,receivables,reload}) => {
     </div>
     <div style={{marginBottom:16}}><Inp value={search} onChange={setSearch} placeholder="Buscar cliente..."/></div>
     <div style={{display:"flex",flexDirection:"column",gap:10}}>
-      {list.slice(0,50).map(c=>(
+      {list.map(c=>(
         <div key={c.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:16,cursor:"pointer"}} onClick={()=>setSel(c)}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div><p style={{margin:0,fontSize:15,fontWeight:700,color:C.text}}>{c.name}</p><p style={{margin:"2px 0 0",fontSize:12,color:C.textMuted}}>{c.city}/{c.state}</p></div>
@@ -899,7 +907,7 @@ const Clients = ({clients,projects,laudos,receivables,reload}) => {
           </div>
         </div>
       ))}
-      {list.length>50&&<p style={{textAlign:"center",color:C.textMuted,fontSize:13}}>Mostrando 50 de {list.length}. Refine a busca.</p>}
+      {search&&clients.filter(c=>c.name?.toLowerCase().includes(search.toLowerCase())||(c.doc||"").includes(search)).length>100&&<p style={{textAlign:"center",color:C.textMuted,fontSize:13}}>Mostrando 100 resultados. Refine a busca.</p>}
       {list.length===0&&<div style={{padding:40,textAlign:"center",color:C.textMuted}}>Nenhum cliente</div>}
     </div>
     {modal&&<Modal title="Novo Cliente" onClose={()=>setModal(false)}>
