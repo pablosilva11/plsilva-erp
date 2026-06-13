@@ -1419,11 +1419,12 @@ const Orcamentos = ({clients}) => {
       <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
         <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Cliente</h3>
         <Fld label="Selecionar cadastrado">
-          <select value={clienteId} onChange={e=>{const c=clients.find(x=>String(x.id)===e.target.value);setClienteId(e.target.value);if(c){setClienteNome(c.name);setClienteEnd((c.city||"")+"/"+(c.state||""));}}}
-            style={{width:"100%",padding:"14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:16,outline:"none",minHeight:48}}>
-            <option value="">Selecione ou preencha abaixo...</option>
-            {clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <ClienteBusca value={clienteId} onChange={v=>{
+            setClienteId(v);
+            sb.from("clients").select("id,name,city,state").eq("id",+v).single().then(({data})=>{
+              if(data){setClienteNome(data.name);setClienteEnd((data.city||"")+"/"+(data.state||""));}
+            });
+          }}/>
         </Fld>
         <Fld label="Nome do Cliente"><Inp value={clienteNome} onChange={setClienteNome} placeholder="Nome ou razao social"/></Fld>
         <Fld label="Endereco"><Inp value={clienteEnd} onChange={setClienteEnd} placeholder="Bairro - Cidade UF"/></Fld>
