@@ -1390,18 +1390,21 @@ const Orcamentos = ({clients}) => {
 
       doc.setFontSize(11);doc.setFont("helvetica","bolditalic");
       doc.text("NOSSOS SERVIÇOS",PW/2,y,{align:"center"});y+=7;
-      [["PROJETOS:","ARQUITETÔNICOS, HIDRÁULICO, ELÉTRICO, PREVENÇÃO E COMBATE A INCÊNDIO, ACESSIBILIDADE."],
+      [["PROJETOS:","ARQUITETONICOS, HIDRAULICO, ELETRICO, PREVENCAO E COMBATE A INCENDIO, ACESSIBILIDADE."],
        ["REFORMAS:","RESIDENCIAIS, COMERCIAIS E INDUSTRIAIS."],
-       ["VISTORIAS:","ENTREGA DE IMÓVEIS NOVOS, VISTORIA TÉCNICA EM CONDOMÍNIOS E OBRAS."],
+       ["VISTORIAS:","ENTREGA DE IMOVEIS NOVOS, VISTORIA TECNICA EM CONDOMINIOS E OBRAS."],
        ["LAUDOS:","PARA REFORMAS."]
       ].forEach(([b,r])=>{
+        chk(12);
         doc.setFont("helvetica","bolditalic");doc.setFontSize(10);
-        doc.text("➢  "+b,ML,y);
-        const bw=doc.getTextWidth("➢  "+b+" ");
+        const prefix="- "+b+" ";
+        const bw=doc.getTextWidth(prefix);
+        doc.text(prefix,ML,y);
         doc.setFont("helvetica","normal");
         const rlines=doc.splitTextToSize(r,TW-bw);
-        rlines.forEach((l,i)=>{doc.text(l,i===0?ML+bw:ML+6,y);y+=5;});
-      });y+=7;
+        rlines.forEach((l,i)=>{doc.text(l,i===0?ML+bw:ML+bw,y);y+=5;});
+        y+=1;
+      });y+=6;
 
       doc.setFontSize(11);doc.setFont("helvetica","bolditalic");
       doc.text("NOSSOS PARCEIROS",PW/2,y,{align:"center"});y+=8;
