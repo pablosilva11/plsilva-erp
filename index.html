@@ -1865,11 +1865,12 @@ const GeradorContrato = ({clients, onClose}) => {
       <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:12,padding:16,marginBottom:14}}>
         <h3 style={{margin:"0 0 14px",fontSize:14,fontWeight:800,color:C.text}}>Dados do Contratante</h3>
         <Fld label="Selecionar cliente cadastrado">
-          <select value={clienteId} onChange={e=>{const c=clients.find(x=>String(x.id)===e.target.value);setClienteId(e.target.value);if(c){setContratoNome(c.name);setContratoCnpj(c.doc||"");setContratoEnd((c.address||"")+(c.city?", "+c.city:"")+(c.state?"/"+c.state:""));}}}
-            style={{width:"100%",padding:"14px",background:C.bg,border:"1px solid "+C.border,borderRadius:10,color:C.text,fontSize:16,outline:"none",minHeight:48}}>
-            <option value="">Selecione ou preencha abaixo...</option>
-            {clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <ClienteBusca value={clienteId} onChange={v=>{
+            setClienteId(v);
+            sb.from("clients").select("id,name,doc,address,city,state").eq("id",+v).single().then(({data})=>{
+              if(data){setContratoNome(data.name);setContratoCnpj(data.doc||"");setContratoEnd((data.address||"")+(data.city?", "+data.city:"")+(data.state?"/"+data.state:""));}
+            });
+          }}/>
         </Fld>
         <Fld label="Nome / Razão Social"><Inp value={contratoNome} onChange={setContratoNome} placeholder="Nome do contratante"/></Fld>
         <Fld label="CNPJ / CPF"><Inp value={contratoCnpj} onChange={setContratoCnpj} placeholder="00.000.000/0001-00"/></Fld>
