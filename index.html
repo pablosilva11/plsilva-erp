@@ -2393,9 +2393,9 @@ function App(){
           {page==="projetos"&&<Projects projects={projects} clients={clients} receivables={receivables} reload={loadAll}/>}
           {page==="documentos"&&<Documentos projects={projects}/>}
           {page==="relatorios"&&<Relatorios receivables={receivables} payables={payables} projects={projects} clients={clients}/>}
-          {page==="orcrapido"&&<OrcamentoRapido clients={clients}/>}
-          {page==="orcrapido"&&<OrcamentoRapido clients={clients}/>}
           {page==="designer"&&<Designer projects={projects}/>}
+          {page==="orcamentos"&&<Orcamentos clients={clients}/>}
+          {page==="orcrapido"&&<OrcamentoRapido clients={clients}/>}
           {page==="contratos"&&<Contratos clients={clients} projects={projects}/>}
           {page==="financeiro"&&<Financial receivables={receivables} payables={payables} clients={clients} projects={projects} reload={loadAll}/>}
         </>}
@@ -2415,12 +2415,6 @@ function App(){
   </button>
   );
 })}
-        (item=>{const active=page===item.k;return(
-          <button key={item.k} onClick={()=>setPage(item.k)} style={{flex:"0 0 auto",minWidth:60,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"8px 10px",border:"none",cursor:"pointer",background:"transparent",color:active?C.accent:C.textMuted,fontSize:9,fontWeight:active?700:500,gap:3,minHeight:56,borderTop:active?`2px solid ${C.accent}`:"2px solid transparent"}}>
-            <span style={{fontSize:18}}>{item.ic}</span>
-            <span style={{whiteSpace:"nowrap"}}>{item.l}</span>
-          </button>
-        );})}
       </div>
     </div>
   );
