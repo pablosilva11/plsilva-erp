@@ -24,7 +24,7 @@ input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.6); }
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useEffect, useMeconst { useState, useEffect, useMemo, useRef } = React;mo } = React;
+const { useState, useEffect, useMemo, useRef } = React;
 const SURL = "https://sreatrvvgxooddhkbago.supabase.co";
 const SKEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyZWF0cnZ2Z3hvb2RkaGtiYWdvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MzUxNjUsImV4cCI6MjA5NjAxMTE2NX0.SOS84j22J7lsIzTaUu-SheVV__d87_YUhhP24puKZvU";
 const sb = supabase.createClient(SURL, SKEY);
@@ -2156,7 +2156,6 @@ const Contratos = ({clients,projects}) => {
     </>}
   </div>);
 };
-const NAV=[
   const OrcamentoRapido = ({clients}) => {
   const [cliente,setCliente]=useState("");
   const [clienteId,setClienteId]=useState("");
@@ -2198,6 +2197,7 @@ const NAV=[
       doc.setFont("helvetica","normal");
       doc.text(cliente,ML+22,y);y+=10;
 
+      // cabecalho tabela
       doc.setFillColor(245,245,245);
       doc.rect(ML,y,TW,8,"F");
       doc.setFontSize(9.5);doc.setFont("helvetica","bold");doc.setTextColor(60,60,60);
@@ -2224,7 +2224,7 @@ const NAV=[
         doc.setDrawColor(230,230,230);doc.setLineWidth(0.2);
         doc.line(ML,y,PW-MR,y);
       });
-
+const NAV=[
       y+=10;
       doc.setFillColor(26,18,0);
       doc.rect(PW-MR-70,y-6,70,12,"F");
@@ -2305,12 +2305,13 @@ const NAV=[
     <Btn full primary onClick={gerarPDF}>Gerar PDF</Btn>
   </div>);
 };
+  const NAV=[
   {k:"dashboard",l:"Início",ic:"📊"},
   {k:"clientes",l:"Clientes",ic:"👥"},
   {k:"projetos",l:"Projetos",ic:"📐"},
   {k:"documentos",l:"Docs",ic:"📁"},
   {k:"relatorios",l:"Relatórios",ic:"📈"},
-  {{k:"orcamentos",l:"Orçamento",ic:"PLS"},
+  {k:"orcamentos",l:"Orçamento",ic:"PLS"},
 {k:"orcrapido",l:"Orç. Rápido",ic:"DSJ"},
   {k:"designer",l:"Designer",ic:"🎨"},
   {k:"contratos",l:"Contratos",ic:"📑"},
